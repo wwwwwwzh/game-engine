@@ -1,0 +1,19 @@
+{
+  "name": "my-game-engine",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "vite": "^5.0.8",
+    "@types/three": "^0.160.0"
+  },
+  "dependencies": {
+    "three": "^0.160.0"
+  }
+}
+
