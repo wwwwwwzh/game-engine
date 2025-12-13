@@ -1,5 +1,5 @@
 # Building a Game Engine from Scratch: A Practical Guide
-## Comprehensive Table of Contents
+## Comprehensive Table of Contents (Updated)
 
 ---
 
@@ -23,14 +23,20 @@
 
 ---
 
-### Chapter 2: The Rendering Foundation
+### Chapter 2: The Rendering Foundation & Game Mathematics
 **Concepts:**
+- History of rendering (painter's algorithm, Z-buffer, rasterization, ray tracing)
 - Graphics APIs overview (WebGL, WebGPU, DirectX, OpenGL, Metal)
 - The rendering pipeline (vertex → fragment shader)
 - 3D coordinate systems (world, view, projection spaces)
 - Introduction to Three.js as our renderer
 - Understanding the scene graph
 - Cameras and viewports
+- Vectors (2D, 3D, 4D) and their operations
+- Matrices and transformations
+- Quaternions for rotations
+- Interpolation (lerp, slerp)
+- Delta time and frame-independent movement
 
 **Implementation Goal:**
 - Initialize WebGL context with Three.js
@@ -38,32 +44,16 @@
 - Render a simple geometric primitive (triangle, then cube)
 - Implement basic camera positioning
 - Add basic lighting (ambient + directional)
-
-**Deliverable:** A rotating colored cube with lighting on screen
-
----
-
-### Chapter 3: Mathematics for Game Engines
-**Concepts:**
-- Vectors (2D, 3D, 4D) and their operations
-- Matrices and transformations
-- Quaternions for rotations
-- Coordinate spaces and transformations
-- Interpolation (lerp, slerp)
-- Delta time and frame-independent movement
-
-**Implementation Goal:**
 - Create Vector3 utility class with core operations
 - Implement Transform class (position, rotation, scale)
 - Build matrix transformation system
-- Create time management system (delta time, fixed timestep)
 - Implement smooth interpolation utilities
 
-**Deliverable:** Objects that move smoothly regardless of frame rate, demonstrating vector math
+**Deliverable:** A rotating colored cube with lighting, plus utility classes for vector math and smooth object movement
 
 ---
 
-### Chapter 4: The Entity-Component Architecture
+### Chapter 3: The Entity-Component Architecture
 **Concepts:**
 - Object-oriented vs. component-based design
 - The GameObject/Component pattern (Unity-style)
@@ -85,7 +75,7 @@
 
 ## PART II: CORE SYSTEMS
 
-### Chapter 5: Scene Management
+### Chapter 4: Scene Management
 **Concepts:**
 - What is a scene?
 - Scene graphs vs. flat structures
@@ -105,7 +95,7 @@
 
 ---
 
-### Chapter 6: Input System
+### Chapter 5: Input System
 **Concepts:**
 - Input abstraction layers
 - Keyboard and mouse events
@@ -125,7 +115,7 @@
 
 ---
 
-### Chapter 7: Camera Systems
+### Chapter 6: Camera Systems
 **Concepts:**
 - Camera types (perspective, orthographic)
 - Projection matrices
@@ -146,7 +136,7 @@
 
 ---
 
-### Chapter 8: Resource Management
+### Chapter 7: Resource Management
 **Concepts:**
 - Asset types (textures, models, audio, shaders)
 - Loading strategies (synchronous, asynchronous, lazy)
@@ -169,7 +159,7 @@
 
 ## PART III: RENDERING SYSTEMS
 
-### Chapter 9: Materials and Shaders
+### Chapter 8: Materials and Shaders
 **Concepts:**
 - Shader basics (vertex, fragment/pixel shaders)
 - Material properties (color, roughness, metalness)
@@ -190,7 +180,7 @@
 
 ---
 
-### Chapter 10: Lighting Systems
+### Chapter 9: Lighting Systems
 **Concepts:**
 - Light types (directional, point, spot, ambient, area)
 - Lighting models (Phong, Blinn-Phong, PBR)
@@ -211,7 +201,7 @@
 
 ---
 
-### Chapter 11: Advanced Rendering Techniques
+### Chapter 10: Advanced Rendering Techniques
 **Concepts:**
 - Shadow mapping (directional, point, cascade)
 - Skyboxes and environment maps
@@ -234,7 +224,7 @@
 
 ---
 
-### Chapter 12: Particle Systems
+### Chapter 11: Particle Systems
 **Concepts:**
 - Particle emitters and behaviors
 - CPU vs. GPU particles
@@ -259,7 +249,7 @@
 
 ## PART IV: PHYSICS AND COLLISION
 
-### Chapter 13: Collision Detection
+### Chapter 12: Collision Detection
 **Concepts:**
 - Bounding volumes (AABB, OBB, sphere, capsule)
 - Spatial partitioning (quadtree, octree, grid)
@@ -282,7 +272,7 @@
 
 ---
 
-### Chapter 14: Physics Integration
+### Chapter 13: Physics Integration
 **Concepts:**
 - Rigidbody dynamics (mass, velocity, forces)
 - Integration methods (Euler, Verlet, RK4)
@@ -307,7 +297,7 @@
 
 ---
 
-### Chapter 15: Character Controllers
+### Chapter 14: Character Controllers
 **Concepts:**
 - Kinematic character controllers
 - Grounded detection
@@ -332,7 +322,7 @@
 
 ## PART V: ANIMATION AND AUDIO
 
-### Chapter 16: Animation Systems
+### Chapter 15: Animation Systems
 **Concepts:**
 - Keyframe animation
 - Skeletal animation (bones, skinning)
@@ -355,7 +345,7 @@
 
 ---
 
-### Chapter 17: Audio Engine
+### Chapter 16: Audio Engine
 **Concepts:**
 - Audio sources and listeners
 - 3D spatial audio
@@ -380,7 +370,7 @@
 
 ## PART VI: GAMEPLAY SYSTEMS
 
-### Chapter 18: User Interface System
+### Chapter 17: User Interface System
 **Concepts:**
 - Immediate mode vs. retained mode GUI
 - Canvas and screen space
@@ -403,7 +393,7 @@
 
 ---
 
-### Chapter 19: Scripting and Behavior Trees
+### Chapter 18: Scripting and Behavior Trees
 **Concepts:**
 - Component scripting patterns
 - Event systems and messaging
@@ -424,7 +414,7 @@
 
 ---
 
-### Chapter 20: Serialization and Persistence
+### Chapter 19: Serialization and Persistence
 **Concepts:**
 - Scene serialization formats (JSON, YAML, binary)
 - Prefab system
@@ -448,7 +438,7 @@
 
 ## PART VII: EDITOR AND TOOLS
 
-### Chapter 21: Scene Editor Fundamentals
+### Chapter 20: Scene Editor Fundamentals
 **Concepts:**
 - Editor vs. runtime separation
 - Immediate mode GUI (ImGui concepts)
@@ -470,7 +460,7 @@
 
 ---
 
-### Chapter 22: Advanced Editor Features
+### Chapter 21: Advanced Editor Features
 **Concepts:**
 - Asset browser and management
 - Drag and drop functionality
@@ -493,7 +483,7 @@
 
 ---
 
-### Chapter 23: Build Pipeline and Optimization
+### Chapter 22: Build Pipeline and Optimization
 **Concepts:**
 - Asset bundling and minification
 - Code splitting and lazy loading
@@ -518,7 +508,7 @@
 
 ## PART VIII: ADVANCED TOPICS
 
-### Chapter 24: Networking and Multiplayer
+### Chapter 23: Networking and Multiplayer
 **Concepts:**
 - Client-server vs. peer-to-peer
 - Network synchronization
@@ -541,7 +531,7 @@
 
 ---
 
-### Chapter 25: Procedural Generation
+### Chapter 24: Procedural Generation
 **Concepts:**
 - Pseudo-random number generation
 - Noise functions (Perlin, Simplex)
@@ -563,7 +553,7 @@
 
 ---
 
-### Chapter 26: Mobile and Cross-Platform
+### Chapter 25: Mobile and Cross-Platform
 **Concepts:**
 - Touch input handling
 - Mobile performance considerations
@@ -584,7 +574,7 @@
 
 ---
 
-### Chapter 27: Advanced Rendering: PBR
+### Chapter 26: Advanced Rendering: PBR
 **Concepts:**
 - Physically Based Rendering theory
 - Metallic-roughness workflow
@@ -605,7 +595,7 @@
 
 ---
 
-### Chapter 28: Data-Oriented Design and ECS
+### Chapter 27: Data-Oriented Design and ECS
 **Concepts:**
 - Data-oriented design principles
 - Cache coherency and memory layout
@@ -626,7 +616,7 @@
 
 ---
 
-### Chapter 29: Extending the Engine
+### Chapter 28: Extending the Engine
 **Concepts:**
 - Plugin architecture
 - Custom component creation
@@ -647,7 +637,7 @@
 
 ---
 
-### Chapter 30: Shipping Your Game
+### Chapter 29: Shipping Your Game
 **Concepts:**
 - Publishing to web (itch.io, GitHub Pages, Netlify)
 - Monetization strategies
@@ -720,14 +710,15 @@
 
 ## Project Timeline and Milestones
 
-**Milestone 1 (Chapters 1-4):** Basic engine with rotating objects
-**Milestone 2 (Chapters 5-8):** Scene management and resource loading
-**Milestone 3 (Chapters 9-12):** Complete rendering pipeline
-**Milestone 4 (Chapters 13-15):** Physics and interaction
-**Milestone 5 (Chapters 16-17):** Animation and audio
-**Milestone 6 (Chapters 18-20):** Gameplay systems
-**Milestone 7 (Chapters 21-23):** Editor and tools
-**Milestone 8 (Chapters 24-30):** Advanced features and shipping
+**Milestone 1 (Chapters 1-2):** Basic engine with 3D rendering and math utilities
+**Milestone 2 (Chapters 3-5):** Component system, scenes, and input
+**Milestone 3 (Chapters 6-7):** Camera systems and resource management
+**Milestone 4 (Chapters 8-11):** Complete rendering pipeline
+**Milestone 5 (Chapters 12-14):** Physics and interaction
+**Milestone 6 (Chapters 15-16):** Animation and audio
+**Milestone 7 (Chapters 17-19):** Gameplay systems
+**Milestone 8 (Chapters 20-22):** Editor and tools
+**Milestone 9 (Chapters 23-29):** Advanced features and shipping
 
 **Final Project:** Complete 2D or 3D game built entirely with your engine
 
