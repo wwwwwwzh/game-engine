@@ -1085,3 +1085,471 @@ Keep going. The next chapter awaits.
 **Chapter 1 Complete** ✓
 
 *Deliverable: A blank canvas that renders at 60 FPS with frame timing in console*
+
+# Appendix
+## Multithreading
+- CPUs
+- CPU cores share L3 memory and memory controller but have their own:
+    - Arithmetic Logic Unit (ALU)
+    - Floating Point Unit (FPU)
+    - L1 Cache (instruction + data)
+    - L2 Cache
+    - Registers
+- logical processors (one cpu core may appear to the os as multiple cores)
+- Process: A program in execution with its own memory space, file descriptors, and resources. It keeps a task queue. 
+- Thread: A lightweight execution unit within a process. Threads in the same process share: *Memory space, File descriptors, Global variables*. But each thread has its own: *Stack, Registers, Program counter*. Threads can enqueue tasks to the process's task queue
+
+```
+1. User clicks app icon
+    ↓
+2. Operating system creates NEW PROCESS using fork
+   - Allocates memory space
+   - Assigns process ID (PID)
+   - Sets up security context
+   - Still NO code running yet!
+    ↓
+3. OS creates the MAIN THREAD (automatically)
+   - This is the process's first thread
+   - Gets its own stack
+   - Gets CPU time
+    ↓
+4. OS loads executable into memory
+    ↓
+5. Main thread starts executing at entry point
+   - In C/C++: main() function
+   - In iOS: UIApplicationMain()
+   - In Android: ActivityThread.main()
+   - In JavaScript/Browser: (handled by browser process)
+    ↓
+6. Your code runs on main thread
+    ↓
+7. Your code can create additional threads
+```
+
+How a process is created
+```c
+// Parent process
+int pid = fork();  // Creates new process + main thread in one step
+
+if (pid == 0) {
+    // Child process - already has main thread executing THIS code
+    printf("Child process %d on thread %ld\n", getpid(), pthread_self());
+    exec("/path/to/program");  
+} else {
+    // Parent process continues
+    printf("Parent process %d\n", getpid());
+}
+```
+
+Event loop of threads
+```cpp
+// Shared queue (in process memory, not thread-local)
+class SharedTaskQueue {
+    std::queue<Task> tasks;
+    std::mutex lock;  // Protects concurrent access
+    
+    void enqueue(Task task) {
+        std::lock_guard guard(lock);
+        tasks.push(task);
+    }
+    
+    Task dequeue() {
+        std::lock_guard guard(lock);
+        return tasks.pop();
+    }
+};
+
+SharedTaskQueue taskQueue;  // ← Shared, not inside thread
+
+// Main thread just references it
+class MainThread {
+    void run() {
+        while (true) { // Event loop
+            if (taskQueue.hasTask()) {  // ← Accessing shared queue
+                Task task = taskQueue.dequeue();
+                execute(task);
+            }
+        }
+    }
+};
+```
+
+### Scheduler Schedules Threads to Cores (iOS example)
+UI on main thread with highest priority. Handles rendering, touch, etc
+
+```
+iPhone 15 Pro Example:
+├── A17 Pro Chip
+│   ├── 2 Performance Cores (High-power, 3.78 GHz)
+│   │   ├── Core 0
+│   │   └── Core 1
+│   └── 4 Efficiency Cores (Low-power, 2.11 GHz)
+│       ├── Core 2
+│       ├── Core 3
+│       ├── Core 4
+│       └── Core 5
+
+Active Threads (typical app):
+├── Main Thread (your app)
+├── Background Thread 1 (your app)
+├── Background Thread 2 (your app)
+├── SpringBoard Main Thread (home screen)
+├── System Service Thread
+├── Network Thread
+├── ... dozens more system threads
+└── Total: 50-200+ threads competing for 6 cores!
+```
+
+Priority based preemptive scheduler
+```
+Priority Levels (0-127, higher = more important):
+
+Real-Time Priority (96-127):
+├── 127: Critical System Threads
+├── 110: Audio I/O Thread (cannot miss deadlines!)
+└── 96:  Time-critical operations
+
+Time-Share Priority (0-95):
+├── 47:  Main Thread (QoS User Interactive)  ← Your UI thread
+├── 46:  User Interactive background work
+├── 37:  User Initiated work
+├── 31:  Default priority
+├── 20:  Utility work
+└── 4:   Background work (lowest)
+```
+
+Scenario: Main thread needs CPU while background thread is running
+
+```
+Current State:
+Core 0: Background Thread (priority 20) - running
+Core 1: System Thread (priority 31) - running
+
+Main Thread wakes up (priority 47):
+1. Scheduler compares priorities
+2. Main thread priority (47) > Background (20)
+3. Scheduler PREEMPTS background thread immediately
+4. Background thread state saved, moved to run queue
+5. Main thread context loaded onto Core 0
+6. Main thread runs
+
+Total time: ~50-100 microseconds for context switch
+```
+
+### JS/Browser Multithreading
+Browser app is multi-process, JS runs on main thread of its tab's process.
+```
+Chrome Application
+│
+├── Browser Process (main process)
+│   └── Multiple threads (UI, I/O, etc.)
+│
+├── Renderer Process #1 (for tab 1)
+│   ├── Main Thread (JS runtime + Event Loop)
+        ├── JavaScript Compilation (V8 compiles your code)
+        ├── JavaScript Execution (running your code)
+        ├── DOM manipulation (document.querySelector, etc.)
+        ├── CSS style calculation
+        ├── Layout (calculating element positions/sizes)
+        ├── Paint (determining what pixels to draw)
+        ├── Input events (click, keypress, scroll)
+        └── Event Loop (managing task queue)
+│   ├── Compositor Thread (rendering)
+│   ├── Raster Threads (painting)
+│   └── Worker Threads (Web Workers)
+│
+├── Renderer Process #2 (for tab 2)
+│   ├── Main Thread (separate JS runtime)
+│   └── Other threads...
+│
+├── GPU Process
+│
+└── Network Process
+    └── Multiple threads for HTTP requests
+
+Rendering loop:
+
+User clicks button (Input captured by os then browser)
+    ↓
+Input event added to task queue (Main thread's queue)
+    ↓
+Main thread processes click event (Main thread)
+    ↓
+JavaScript event handler runs (Main thread)
+    ↓
+DOM updated (Main thread)
+    ↓
+Style recalculated (Main thread)
+    ↓
+Layout calculated (Main thread)
+    ↓
+Paint instructions generated (Main thread)
+    ↓
+Send to raster threads
+    ↓
+Converts paint instructions into actual pixel bitmaps (Raster threads)
+    ↓
+Send rasterized bitmaps to compositor thread
+    ↓
+Combines bitmaps into layers and composites final image (Compositor thread)
+    ↓
+Send to GPU/Screen
+```
+```js
+// This is why:
+// Cheap (compositor only):
+element.style.transform = "translateX(100px)";
+element.style.opacity = 0.5;
+
+// Expensive (requires main thread paint + raster):
+element.style.left = "100px";  // Triggers layout
+element.style.backgroundColor = "red";  // Triggers paint
+```
+
+
+```js
+console.log("Start");
+
+setTimeout(function() {
+    console.log("Inside timeout");
+}, 2000);
+
+console.log("End");
+
+// Output:
+// "Start"
+// "End"
+// ... 2 seconds pass ...
+// "Inside timeout"
+```
+
+**What actually happened:**
+```
+1. Execute: console.log("Start")
+2. Execute: setTimeout(...)
+   - JavaScript puts a task to Browser's shared task queue
+   - setTimeout RETURNS IMMEDIATELY (doesn't wait!)
+   - Browser's Timer Thread handles the task
+3. Execute: console.log("End")
+4. JavaScript thread is now idle
+5. ... 2 seconds pass (handled by browser) ...
+6. Timer Thread puts the callback to task queue 
+8. JavaScript found the task and executes: console.log("Inside timeout")
+```
+
+Callback Hell
+```js
+getUserData(userId, (user) => {
+    getOrders(user.id, (orders) => {
+        getOrderDetails(orders[0].id, (details) => {
+            getShippingInfo(details.trackingId, (shipping) => {
+                console.log(shipping);  // Finally got the data!
+            });
+        });
+    });
+});
+// This becomes hard to read and maintain
+```
+
+
+## JS Async
+### Promise
+Promise implementation. Basically, you pass an aync function with 2 arguments (which are functions) to Promise as init argument and the Promise constructor will immediately run the function with the Promise's resovle and reject function as arguments. Resolve and reject runs callbacks with value defined by you in Promise constructor. callbacks are provided in then and catch. 
+```js
+class MyPromise {
+    constructor(executor) {
+        this.state = 'pending';  // 'pending', 'fulfilled', or 'rejected'
+        this.value = undefined;   // resolved value or rejection reason
+        this.callbacks = [];      // array of {onFulfilled, onRejected}
+        
+        // Call executor immediately with resolve/reject functions
+        try {
+            executor(this._resolve.bind(this), this._reject.bind(this));
+        } catch (error) {
+            this._reject(error);
+        }
+    }
+    
+    _resolve(value) {
+        if (this.state !== 'pending') return;  // Can only resolve once
+        
+        this.state = 'fulfilled';
+        this.value = value;
+        
+        // Execute all queued callbacks
+        this.callbacks.forEach(callback => {
+            if (callback.onFulfilled) {
+                callback.onFulfilled(value);
+            }
+        });
+    }
+    
+    _reject(reason) {
+        if (this.state !== 'pending') return;  // Can only reject once
+        
+        this.state = 'rejected';
+        this.value = reason;
+        
+        // Execute all queued callbacks
+        this.callbacks.forEach(callback => {
+            if (callback.onRejected) {
+                callback.onRejected(reason);
+            }
+        });
+    }
+    
+    then(onFulfilled, onRejected) {
+        return new MyPromise((resolve, reject) => {
+            const handle = () => {
+                if (this.state === 'fulfilled') {
+                    if (onFulfilled) {
+                        try {
+                            const result = onFulfilled(this.value);
+                            resolve(result);
+                        } catch (error) {
+                            reject(error);
+                        }
+                    } else {
+                        resolve(this.value);
+                    }
+                } else if (this.state === 'rejected') {
+                    if (onRejected) {
+                        try {
+                            const result = onRejected(this.value);
+                            resolve(result);
+                        } catch (error) {
+                            reject(error);
+                        }
+                    } else {
+                        reject(this.value);
+                    }
+                }
+            };
+            
+            if (this.state === 'pending') {
+                // Promise not settled yet, queue callback
+                this.callbacks.push({
+                    onFulfilled: onFulfilled ? () => handle() : null,
+                    onRejected: onRejected ? () => handle() : null
+                });
+            } else {
+                // Promise already settled, execute immediately (as microtask)
+                queueMicrotask(handle);
+            }
+        });
+    }
+    
+    catch(onRejected) {
+        return this.then(null, onRejected);
+    }
+}
+```
+
+```js
+// Usage:
+const promise = new MyPromise((resolve, reject) => {
+    setTimeout(() => resolve("done"), 1000);
+});
+
+promise.then(result => console.log(result));
+
+// What happens:
+// 1. MyPromise constructor runs
+// 2. executor function called with resolve/reject
+// 3. setTimeout schedules resolve("done") for later
+// 4. Constructor returns, promise.state = 'pending'
+// 5. .then() is called, adds callback to callbacks array
+// 6. 1 second later, resolve("done") executes
+// 7. Changes state to 'fulfilled', value to "done"
+// 8. Resovle executes all callbacks in callbacks array
+// 9. Your callback runs: console.log("done")
+```
+
+### Async Await
+```js
+// You write:
+async function fetchData() {
+    return "hello";
+}
+
+// Compiler transforms to:
+function fetchData() {
+    return Promise.resolve("hello");
+}
+
+// note that Promise.resolve("hello") equals
+new Promise((resolve) => {
+    resolve("hello");
+});
+
+// You write:
+async function example() {
+    console.log("A");
+    const result = await Promise.resolve("B");
+    console.log(result);
+    console.log("C");
+}
+
+// Compiler transforms to something like:
+function example() {
+    return new Promise((resolve) => {
+        console.log("A");
+        
+        Promise.resolve("B").then((result) => {
+            console.log(result);
+            console.log("C");
+            resolve(undefined);
+        });
+    });
+}
+```
+
+### requestAnimationFrame
+https://medium.com/@wul55267/demystifying-the-js-event-loop-a-bytedance-interview-question-to-deeply-understand-async-await-b0b9ad303884
+
+```
+Event Loop (Main Thread):
+│
+├── Execute JavaScript
+├── Process microtasks
+│
+├── requestAnimationFrame callbacks  ← YOUR CALLBACK RUNS HERE
+│
+├── Style calculation (Main thread)
+├── Layout calculation (Main thread)
+├── Paint instructions (Main thread)  ← This is the "repaint"
+│
+└── Send to Raster → Compositor → Screen
+```
+
+Event Loop implementation
+```js
+function eventLoop() {
+    while (true) {
+        while (taskQueue.hasTask()) {
+            executeTask(taskQueue.dequeue());
+        }
+        while (microtaskQueue.hasTask()) {
+            executeTask(microtaskQueue.dequeue());
+        }
+        // 3. Render (60fps = every ~16ms)
+        if (shouldRender()) {
+            const snapshot = rafQueue.slice();  // Copy current callbacks
+            rafQueue = [];  // Clear original
+            
+            snapshot.forEach(callback => {
+                callback();  // New RAF calls go to empty rafQueue
+            });
+            
+            // rafQueue now has callbacks for NEXT frame only
+            // render
+            recalculateStyles();
+            doLayout();
+            paint();
+        }        
+    }
+}
+
+```
+
+so in the Engine, after start finishes, gameLoop() is put on a before raf (requestAnimationFrame) queue, then right before rendering the first frame, gameLoop() is called and after all game calculations, gameLoop() is again put on the queue. 

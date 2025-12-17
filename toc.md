@@ -1,5 +1,5 @@
 # Building a Game Engine from Scratch: A Practical Guide
-## Comprehensive Table of Contents (Updated)
+## Comprehensive Table of Contents (Revised Edition)
 
 ---
 
@@ -53,7 +53,7 @@
 
 ---
 
-### Chapter 3: The Entity-Component Architecture
+### Chapter 3: The Entity-Component Architecture + Editor Foundation
 **Concepts:**
 - Object-oriented vs. component-based design
 - The GameObject/Component pattern (Unity-style)
@@ -61,6 +61,9 @@
 - When to use each architecture
 - Component lifecycle (Awake, Start, Update, Destroy)
 - Communication between components
+- **Editor architecture fundamentals**
+- **Separation of editor and runtime code**
+- **HTML/CSS overlay for editor UI**
 
 **Implementation Goal:**
 - Build GameObject base class
@@ -68,14 +71,18 @@
 - Implement component management (add, remove, get)
 - Create Transform as a built-in component
 - Build a simple example component (Rotator)
+- **Create basic editor UI framework (HTML/CSS panels)**
+- **Build hierarchy panel showing scene objects**
+- **Implement inspector panel for viewing GameObject properties**
+- **Add play/stop buttons for editor mode vs. play mode**
 
-**Deliverable:** Multiple GameObjects with different behaviors via components
+**Deliverable:** Multiple GameObjects with different behaviors via components + basic editor UI with hierarchy and inspector panels
 
 ---
 
-## PART II: CORE SYSTEMS
+## PART II: CORE SYSTEMS WITH PROGRESSIVE EDITOR
 
-### Chapter 4: Scene Management
+### Chapter 4: Scene Management + Scene Editor
 **Concepts:**
 - What is a scene?
 - Scene graphs vs. flat structures
@@ -83,6 +90,8 @@
 - Scene lifecycle management
 - Multiple scene handling
 - Scene transitions and loading
+- **Visual scene editing**
+- **Scene tree representation**
 
 **Implementation Goal:**
 - Build Scene class with GameObject management
@@ -90,12 +99,17 @@
 - Create scene loading/unloading system
 - Build lookup systems (find by name, tag, type)
 - Implement scene switching with fade transitions
+- **Enhance hierarchy panel with draggable parent-child tree view**
+- **Add object creation button (cube, sphere, light, empty, empty parent.)**
+- **Implement object deletion, copy pasting, renaming from hierarchy**
+- **Add scene save/load buttons in editor UI**
+- **Create scene switching dropdown in editor**
 
-**Deliverable:** Multiple scenes with hierarchical objects, ability to switch between them
+**Deliverable:** Multiple scenes with hierarchical objects + editor with visual scene tree and scene management
 
 ---
 
-### Chapter 5: Input System
+### Chapter 5: Input System + Editor Selection
 **Concepts:**
 - Input abstraction layers
 - Keyboard and mouse events
@@ -103,6 +117,8 @@
 - Input mapping and rebinding
 - Touch and gamepad considerations
 - Cross-platform input handling
+- **Editor vs. game input handling**
+- **Object selection and manipulation**
 
 **Implementation Goal:**
 - Build centralized InputManager
@@ -110,12 +126,17 @@
 - Add mouse input (position, delta, buttons, wheel)
 - Create input action mapping system
 - Build simple key rebinding interface
+- **Implement viewport mouse interaction**
+- **Add object selection by clicking in viewport**
+- **Create selection highlighting (outline/gizmo)**
+- **Build focus on selected object (F key)**
+- **Add multi-selection (Shift/Ctrl click)**
 
-**Deliverable:** Character controller responding to customizable keyboard/mouse input
+**Deliverable:** Character controller responding to customizable input + editor with clickable object selection
 
 ---
 
-### Chapter 6: Camera Systems
+### Chapter 6: Camera Systems + Viewport Controls
 **Concepts:**
 - Camera types (perspective, orthographic)
 - Projection matrices
@@ -123,6 +144,8 @@
 - Camera control patterns (orbit, first-person, third-person, 2D)
 - Multiple camera rendering
 - Viewport and split-screen
+- **Editor camera vs. game camera**
+- **Viewport navigation patterns**
 
 **Implementation Goal:**
 - Create Camera component class
@@ -131,12 +154,17 @@
 - Add third-person camera with collision avoidance
 - Create camera switching system
 - Implement split-screen multi-camera rendering
+- **Add editor camera controller (orbit, pan, zoom)**
+- **Implement viewport navigation (WASD for fly, Alt+drag for orbit)**
+- **Create camera gizmo showing view frustum**
+- **Add camera component inspector with FOV, near/far plane controls**
+- **Build viewport toolbar (wireframe, shading modes)**
 
-**Deliverable:** Switchable camera modes with smooth transitions, demonstrating different perspectives
+**Deliverable:** Switchable camera modes + editor viewport with full navigation controls
 
 ---
 
-### Chapter 7: Resource Management
+### Chapter 7: Resource Management + Asset Browser
 **Concepts:**
 - Asset types (textures, models, audio, shaders)
 - Loading strategies (synchronous, asynchronous, lazy)
@@ -144,6 +172,8 @@
 - Reference counting and garbage collection
 - Asset bundles and streaming
 - Hot-reloading for development
+- **Visual asset management**
+- **Asset thumbnails and previews**
 
 **Implementation Goal:**
 - Build AssetManager class
@@ -152,14 +182,20 @@
 - Create async asset loading with progress tracking
 - Implement asset reference system
 - Add hot-reload functionality for development
+- **Create asset browser panel in editor**
+- **Generate and display asset thumbnails**
+- **Implement drag-and-drop from browser to scene**
+- **Add asset preview window**
+- **Build asset import dialog with settings**
+- **Add asset search/filter functionality**
 
-**Deliverable:** Scene that loads multiple assets asynchronously with loading screen
+**Deliverable:** Asset loading system + visual asset browser with drag-and-drop
 
 ---
 
-## PART III: RENDERING SYSTEMS
+## PART III: RENDERING SYSTEMS WITH VISUAL EDITORS
 
-### Chapter 8: Materials and Shaders
+### Chapter 8: Materials and Shaders + Material Editor
 **Concepts:**
 - Shader basics (vertex, fragment/pixel shaders)
 - Material properties (color, roughness, metalness)
@@ -167,6 +203,8 @@
 - UV coordinates and texture atlases
 - Shader languages (GLSL for WebGL)
 - Material systems and variants
+- **Visual material editing**
+- **Material preview rendering**
 
 **Implementation Goal:**
 - Create Material class
@@ -175,12 +213,18 @@
 - Build material property system
 - Create shader hot-reloading
 - Implement multiple material types (unlit, standard, custom)
+- **Build material inspector panel**
+- **Add color pickers for material colors**
+- **Create texture assignment slots with drag-and-drop**
+- **Implement material preview sphere**
+- **Add shader property editing interface**
+- **Build material presets library**
 
-**Deliverable:** Objects with custom shaders and multiple texture maps
+**Deliverable:** Objects with custom shaders + visual material editor with preview
 
 ---
 
-### Chapter 9: Lighting Systems
+### Chapter 9: Lighting Systems + Light Gizmos
 **Concepts:**
 - Light types (directional, point, spot, ambient, area)
 - Lighting models (Phong, Blinn-Phong, PBR)
@@ -188,6 +232,8 @@
 - Light attenuation and falloff
 - Multiple light handling
 - Performance considerations
+- **Visual light representation**
+- **Light property editing**
 
 **Implementation Goal:**
 - Create Light component base class
@@ -196,12 +242,18 @@
 - Add support for multiple dynamic lights
 - Implement light culling for performance
 - Create ambient occlusion approximation
+- **Add light gizmos in viewport (direction arrows, range spheres)**
+- **Create light component inspector with controls**
+- **Implement color picker for light color**
+- **Add intensity/range sliders**
+- **Build light visualization modes (show range, show direction)**
+- **Create light presets (sunset, noon, night)**
 
-**Deliverable:** Scene with multiple light types illuminating various materials
+**Deliverable:** Scene with multiple light types + editor with visual light manipulation
 
 ---
 
-### Chapter 10: Advanced Rendering Techniques
+### Chapter 10: Advanced Rendering + Post-Processing Editor
 **Concepts:**
 - Shadow mapping (directional, point, cascade)
 - Skyboxes and environment maps
@@ -210,6 +262,8 @@
 - Bloom, color grading, tone mapping
 - Screen-space reflections
 - Render targets and multiple passes
+- **Visual post-processing stack**
+- **Effect parameter tweaking**
 
 **Implementation Goal:**
 - Implement shadow mapping for directional lights
@@ -219,12 +273,18 @@
 - Implement fog (linear, exponential)
 - Add vignette and color correction
 - Create render-to-texture system
+- **Build post-processing effects panel**
+- **Add effect enable/disable toggles**
+- **Create parameter sliders for each effect**
+- **Implement effect preview window**
+- **Add effect presets and save/load**
+- **Build visual skybox browser**
 
-**Deliverable:** Atmospheric scene with shadows, skybox, and post-processing effects
+**Deliverable:** Atmospheric scene with effects + visual post-processing editor
 
 ---
 
-### Chapter 11: Particle Systems
+### Chapter 11: Particle Systems + Particle Editor
 **Concepts:**
 - Particle emitters and behaviors
 - CPU vs. GPU particles
@@ -233,6 +293,8 @@
 - Particle sorting and blending
 - Texture sheets and animation
 - Performance optimization
+- **Visual particle system editing**
+- **Particle preview and simulation**
 
 **Implementation Goal:**
 - Build ParticleSystem component
@@ -242,14 +304,20 @@
 - Implement color and size over lifetime
 - Build particle pooling for performance
 - Add different blend modes
+- **Create particle system inspector**
+- **Add curve editors for properties over lifetime**
+- **Build particle preview window with playback controls**
+- **Implement particle presets (fire, smoke, sparkles, rain)**
+- **Add emission shape visualization**
+- **Create particle texture atlas editor**
 
-**Deliverable:** Fire, smoke, sparkle effects using particle systems
+**Deliverable:** Particle effects + visual particle editor with curve editing
 
 ---
 
-## PART IV: PHYSICS AND COLLISION
+## PART IV: PHYSICS WITH VISUAL DEBUGGING
 
-### Chapter 12: Collision Detection
+### Chapter 12: Collision Detection + Collision Visualization
 **Concepts:**
 - Bounding volumes (AABB, OBB, sphere, capsule)
 - Spatial partitioning (quadtree, octree, grid)
@@ -258,6 +326,8 @@
 - Ray casting and shape casting
 - Trigger volumes
 - Continuous collision detection
+- **Visual collision debugging**
+- **Collider editing in viewport**
 
 **Implementation Goal:**
 - Create Collider component base class
@@ -267,12 +337,18 @@
 - Create spatial partitioning grid
 - Add trigger volume support
 - Build collision query system (overlap, raycast)
+- **Add collider gizmos (wireframe shapes)**
+- **Create collider component inspector**
+- **Implement collider size/offset editing with handles**
+- **Add collision visualization mode (show contacts, normals)**
+- **Build raycast debugging visualization**
+- **Add trigger volume highlighting**
 
-**Deliverable:** Interactive scene with clickable objects and collision visualization
+**Deliverable:** Interactive collision system + visual collider editing and debugging
 
 ---
 
-### Chapter 13: Physics Integration
+### Chapter 13: Physics Integration + Physics Debugger
 **Concepts:**
 - Rigidbody dynamics (mass, velocity, forces)
 - Integration methods (Euler, Verlet, RK4)
@@ -282,6 +358,8 @@
 - Physics materials
 - Physics vs. kinematic objects
 - Fixed timestep for physics
+- **Visual physics debugging**
+- **Physics simulation controls**
 
 **Implementation Goal:**
 - Create Rigidbody component
@@ -292,12 +370,18 @@
 - Create kinematic rigidbody option
 - Add fixed timestep physics loop
 - Integrate with existing collision system
+- **Build rigidbody component inspector**
+- **Add mass/drag/gravity controls**
+- **Create physics material editor**
+- **Implement velocity visualization (arrows showing direction/magnitude)**
+- **Add physics pause/step controls in editor**
+- **Build physics statistics panel (active bodies, contacts, performance)**
 
-**Deliverable:** Physics sandbox with bouncing balls, stacked boxes, and interactive objects
+**Deliverable:** Physics sandbox + visual physics debugger with controls
 
 ---
 
-### Chapter 14: Character Controllers
+### Chapter 14: Character Controllers + Controller Tuning
 **Concepts:**
 - Kinematic character controllers
 - Grounded detection
@@ -306,6 +390,8 @@
 - Jump mechanics
 - Moving platforms
 - Character-specific collision resolution
+- **Visual controller tuning**
+- **Character debug visualization**
 
 **Implementation Goal:**
 - Build CharacterController component
@@ -315,14 +401,20 @@
 - Implement jump with variable height
 - Add moving platform support
 - Build first-person and third-person character controllers
+- **Create character controller inspector**
+- **Add step height/slope limit sliders**
+- **Implement grounded state visualization**
+- **Build jump arc preview**
+- **Add character controller presets (FPS, platformer, etc.)**
+- **Create movement path visualization for testing**
 
-**Deliverable:** Playable character that walks, jumps, climbs steps, handles slopes
+**Deliverable:** Playable character + visual controller tuning interface
 
 ---
 
-## PART V: ANIMATION AND AUDIO
+## PART V: ANIMATION AND AUDIO WITH EDITORS
 
-### Chapter 15: Animation Systems
+### Chapter 15: Animation Systems + Animation Editor
 **Concepts:**
 - Keyframe animation
 - Skeletal animation (bones, skinning)
@@ -331,6 +423,8 @@
 - Inverse kinematics (IK)
 - Procedural animation
 - Animation curves and easing
+- **Visual animation editing**
+- **Timeline-based editing**
 
 **Implementation Goal:**
 - Create Animation and AnimationClip classes
@@ -340,12 +434,18 @@
 - Create simple state machine for animations
 - Implement animation curves
 - Add support for animated transforms
+- **Build animation timeline editor**
+- **Create keyframe manipulation (add, move, delete)**
+- **Implement curve editor for animation properties**
+- **Add animation preview with playback controls**
+- **Build state machine visual editor**
+- **Create animation blending visualization**
 
-**Deliverable:** Animated character with walk/run/jump animations that blend smoothly
+**Deliverable:** Animated character + visual animation editor with timeline
 
 ---
 
-### Chapter 16: Audio Engine
+### Chapter 16: Audio Engine + Audio Mixer
 **Concepts:**
 - Audio sources and listeners
 - 3D spatial audio
@@ -354,6 +454,8 @@
 - Music and sound effect management
 - Audio pooling and streaming
 - Cross-fading and ducking
+- **Visual audio mixing**
+- **3D audio visualization**
 
 **Implementation Goal:**
 - Create AudioSource component
@@ -363,14 +465,20 @@
 - Create audio mixing system
 - Implement audio pooling
 - Add music crossfading system
+- **Build audio source inspector**
+- **Create audio mixer panel with channel strips**
+- **Add volume meters and level visualization**
+- **Implement 3D audio range visualization in viewport**
+- **Build audio waveform preview**
+- **Create audio effect rack interface**
 
-**Deliverable:** 3D scene with positional sounds and background music
+**Deliverable:** 3D audio system + visual audio mixer interface
 
 ---
 
-## PART VI: GAMEPLAY SYSTEMS
+## PART VI: GAMEPLAY SYSTEMS WITH UI TOOLS
 
-### Chapter 17: User Interface System
+### Chapter 17: User Interface System + UI Editor
 **Concepts:**
 - Immediate mode vs. retained mode GUI
 - Canvas and screen space
@@ -379,6 +487,8 @@
 - UI components (buttons, sliders, panels)
 - UI rendering order and layers
 - Responsive design
+- **Visual UI editing**
+- **WYSIWYG UI design**
 
 **Implementation Goal:**
 - Build UI system with HTML/CSS overlay
@@ -388,12 +498,18 @@
 - Build event system for UI interaction
 - Create UI manager for screen transitions
 - Implement responsive canvas scaling
+- **Build WYSIWYG UI editor**
+- **Add UI element drag-and-drop positioning**
+- **Create anchor/pivot visualization**
+- **Implement UI element inspector with layout controls**
+- **Add UI canvas overlay in viewport**
+- **Build UI hierarchy panel separate from scene hierarchy**
 
-**Deliverable:** Game menu system with buttons, settings panel, HUD elements
+**Deliverable:** Game UI system + visual UI editor with drag-and-drop
 
 ---
 
-### Chapter 18: Scripting and Behavior Trees
+### Chapter 18: Scripting + Script Editor
 **Concepts:**
 - Component scripting patterns
 - Event systems and messaging
@@ -401,6 +517,8 @@
 - State machines
 - Coroutines and async operations
 - Hot-reloading scripts
+- **In-editor scripting**
+- **Script debugging tools**
 
 **Implementation Goal:**
 - Create ScriptComponent base class
@@ -409,12 +527,18 @@
 - Create simple AI enemy using behavior tree
 - Add coroutine system for timed operations
 - Implement script hot-reloading
+- **Build code editor panel (Monaco/CodeMirror)**
+- **Add syntax highlighting for TypeScript**
+- **Implement hot-reload on save**
+- **Create script component inspector with exposed variables**
+- **Add console panel for logs/errors**
+- **Build behavior tree visual editor**
 
-**Deliverable:** AI enemies with patrol, chase, attack behaviors using behavior trees
+**Deliverable:** AI behaviors + in-browser code editor with hot-reload
 
 ---
 
-### Chapter 19: Serialization and Persistence
+### Chapter 19: Serialization + Scene Format
 **Concepts:**
 - Scene serialization formats (JSON, YAML, binary)
 - Prefab system
@@ -423,6 +547,8 @@
 - Component serialization
 - Reference handling
 - Compression
+- **Visual prefab creation**
+- **Scene file management**
 
 **Implementation Goal:**
 - Build serialization system for GameObjects
@@ -431,59 +557,78 @@
 - Add save game system for player data
 - Implement reference resolution
 - Add versioning for backwards compatibility
+- **Add "Create Prefab" from selected object**
+- **Build prefab editor mode**
+- **Implement prefab instance override visualization**
+- **Create scene file browser in asset panel**
+- **Add scene template system**
+- **Build project settings editor**
 
-**Deliverable:** Game that saves/loads scenes and player progress
-
----
-
-## PART VII: EDITOR AND TOOLS
-
-### Chapter 20: Scene Editor Fundamentals
-**Concepts:**
-- Editor vs. runtime separation
-- Immediate mode GUI (ImGui concepts)
-- Viewport rendering
-- Gizmos and visual helpers
-- Object selection and manipulation
-- Undo/redo system
-
-**Implementation Goal:**
-- Create editor UI framework
-- Build viewport window with scene rendering
-- Implement hierarchy panel (scene tree view)
-- Add inspector panel (property editing)
-- Create transform gizmos (translate, rotate, scale)
-- Build selection system
-- Implement undo/redo stack
-
-**Deliverable:** Basic scene editor where you can add/move/delete objects visually
+**Deliverable:** Save/load system + visual prefab creation workflow
 
 ---
 
-### Chapter 21: Advanced Editor Features
+## PART VII: ADVANCED EDITOR FEATURES
+
+### Chapter 20: Transform Gizmos + Manipulation Tools
 **Concepts:**
-- Asset browser and management
-- Drag and drop functionality
-- Custom inspectors
-- Editor windows and layouts
+- Gizmo rendering and interaction
+- Transform manipulation (translate, rotate, scale)
 - Snapping and grid systems
-- Play mode vs. edit mode
-- Editor shortcuts and productivity
+- Local vs. world space manipulation
+- Pivot and center modes
+- Multi-object editing
+- **Advanced viewport tools**
+- **Visual transform feedback**
 
 **Implementation Goal:**
-- Build asset browser with thumbnails
-- Implement drag-and-drop for assets
-- Create custom component inspectors
-- Add grid snapping for transforms
-- Implement play/stop mode switching
-- Build keyboard shortcuts system
-- Add scene view navigation helpers
+- Create transform gizmo rendering system
+- Implement translate gizmo (3-axis arrows)
+- Build rotate gizmo (rotation circles)
+- Add scale gizmo (3-axis handles)
+- Implement gizmo interaction and dragging
+- Add grid snapping with visual feedback
+- Build angle snapping for rotation
+- **Create gizmo mode switcher (W/E/R hotkeys)**
+- **Add coordinate space toggle (local/world)**
+- **Implement pivot mode switching (center/pivot)**
+- **Build multi-selection transform averaging**
+- **Add transform numeric input fields**
+- **Create grid size controls**
 
-**Deliverable:** Full-featured editor with asset management and play mode
+**Deliverable:** Full transform manipulation with visual gizmos
 
 ---
 
-### Chapter 22: Build Pipeline and Optimization
+### Chapter 21: Advanced Viewport Features
+**Concepts:**
+- Multiple viewport layouts
+- Viewport rendering modes (wireframe, shaded, lit)
+- Camera bookmarks and navigation
+- Viewport overlays and stats
+- Custom viewport tools
+- Performance visualization
+- **Professional viewport experience**
+
+**Implementation Goal:**
+- Implement viewport layout system (1-up, 2-up, 4-up)
+- Add rendering mode switcher (wireframe, unlit, lit, material override)
+- Create camera bookmark system
+- Build viewport statistics overlay
+- Add custom viewport overlays (grid, axis indicator)
+- Implement frame rate visualization
+- **Create viewport menu bar**
+- **Add shading mode dropdown**
+- **Build camera bookmark UI**
+- **Implement draw call visualization mode**
+- **Add overdraw visualization**
+- **Create viewport screenshot/recording tools**
+
+**Deliverable:** Professional viewport with multiple view modes
+
+---
+
+### Chapter 22: Build Pipeline + Project Settings
 **Concepts:**
 - Asset bundling and minification
 - Code splitting and lazy loading
@@ -492,6 +637,8 @@
 - Occlusion culling
 - Profiling and performance monitoring
 - Build configurations (development, production)
+- **Visual build configuration**
+- **Project-wide settings**
 
 **Implementation Goal:**
 - Create build system (Vite configuration)
@@ -501,14 +648,71 @@
 - Create performance profiler (FPS, draw calls, memory)
 - Implement object pooling pattern
 - Add statistics overlay
+- **Build project settings window**
+- **Create build configuration UI**
+- **Add quality settings editor**
+- **Implement platform-specific build settings**
+- **Build one-click export to web**
+- **Create profiler panel with graphs**
 
-**Deliverable:** Optimized build with profiling tools showing performance metrics
+**Deliverable:** Build pipeline + comprehensive project settings editor
 
 ---
 
-## PART VIII: ADVANCED TOPICS
+### Chapter 23: Undo/Redo System
+**Concepts:**
+- Command pattern for undo/redo
+- Transaction batching
+- Memory management for history
+- Serialization for complex undos
+- Redo after modification handling
+- **User-friendly history**
 
-### Chapter 23: Networking and Multiplayer
+**Implementation Goal:**
+- Build command pattern framework
+- Implement undo/redo stack
+- Create commands for all editor actions (move, delete, modify, etc.)
+- Add transaction batching for multi-operation actions
+- Implement history size limits
+- Add undo/redo keyboard shortcuts (Ctrl+Z, Ctrl+Y)
+- **Build history panel showing action stack**
+- **Add visual feedback for undoable actions**
+- **Implement selective undo (jump to specific point)**
+- **Create undo preview mode**
+
+**Deliverable:** Full undo/redo system across all editor actions
+
+---
+
+### Chapter 24: Custom Inspectors + Property Drawers
+**Concepts:**
+- Reflection and property introspection
+- Custom inspector UI
+- Property validation
+- Multi-object editing
+- Property drawers and decorators
+- **Extensible inspector system**
+
+**Implementation Goal:**
+- Build reflection system for component properties
+- Create automatic inspector generation
+- Implement custom inspector registration
+- Add property drawer system (custom UI for specific types)
+- Build validation and constraints system
+- Implement multi-object editing with mixed value display
+- **Create property decorator system (range sliders, color pickers)**
+- **Add property tooltips and help text**
+- **Build custom inspector examples**
+- **Implement property context menus**
+- **Add copy/paste for property values**
+
+**Deliverable:** Extensible inspector system with custom drawers
+
+---
+
+## PART VIII: ADVANCED TOPICS WITH EDITOR SUPPORT
+
+### Chapter 25: Networking + Multiplayer Testing
 **Concepts:**
 - Client-server vs. peer-to-peer
 - Network synchronization
@@ -517,6 +721,7 @@
 - Interpolation and prediction
 - Authority and ownership
 - WebSocket and WebRTC basics
+- **In-editor multiplayer testing**
 
 **Implementation Goal:**
 - Build network manager with WebSocket
@@ -526,12 +731,16 @@
 - Build server reconciliation
 - Implement remote procedure calls (RPC)
 - Add simple lobby/matchmaking
+- **Build network inspector showing sync state**
+- **Add network statistics panel (ping, bandwidth)**
+- **Create multiple instance testing from editor**
+- **Implement network condition simulation (lag, packet loss)**
 
-**Deliverable:** Basic multiplayer demo with synchronized players
+**Deliverable:** Multiplayer system + in-editor network testing tools
 
 ---
 
-### Chapter 24: Procedural Generation
+### Chapter 26: Procedural Generation + Generator Editor
 **Concepts:**
 - Pseudo-random number generation
 - Noise functions (Perlin, Simplex)
@@ -540,6 +749,8 @@
 - Procedural mesh creation
 - Vegetation placement
 - Seeded generation for reproducibility
+- **Visual generator editing**
+- **Real-time preview**
 
 **Implementation Goal:**
 - Implement noise generation utilities
@@ -548,12 +759,46 @@
 - Add dungeon/level generation algorithm
 - Implement procedural decoration placement
 - Create seed-based deterministic generation
+- **Build procedural generator inspector**
+- **Add noise parameter editors with real-time preview**
+- **Create terrain shape editor with height map preview**
+- **Implement seed input and regenerate button**
+- **Add procedural placement brush tools**
+- **Build generator preset library**
 
-**Deliverable:** Procedurally generated terrain and dungeons
+**Deliverable:** Procedural generation + visual editor with live preview
 
 ---
 
-### Chapter 25: Mobile and Cross-Platform
+### Chapter 27: Terrain Editor
+**Concepts:**
+- Heightmap-based terrain
+- Terrain sculpting (raise, lower, smooth, flatten)
+- Texture painting and splatmaps
+- Detail placement (grass, rocks, trees)
+- Terrain LOD and chunking
+- Collision generation
+- **Visual terrain editing tools**
+
+**Implementation Goal:**
+- Create terrain system with heightmap
+- Implement terrain rendering with LOD
+- Build terrain sculpting tools
+- Add texture splatmap painting
+- Create detail/foliage placement system
+- Implement terrain collision generation
+- **Build terrain editor toolbar**
+- **Add brush size/strength controls**
+- **Create terrain texture painter**
+- **Implement foliage brush with density controls**
+- **Add terrain import/export (heightmap images)**
+- **Build terrain stamps and presets**
+
+**Deliverable:** Full terrain system with visual sculpting tools
+
+---
+
+### Chapter 28: Mobile and Cross-Platform + Device Testing
 **Concepts:**
 - Touch input handling
 - Mobile performance considerations
@@ -561,6 +806,7 @@
 - Device capabilities detection
 - Progressive web apps (PWA)
 - Platform-specific optimizations
+- **Device simulation in editor**
 
 **Implementation Goal:**
 - Add touch input support
@@ -569,75 +815,17 @@
 - Build device capability detection
 - Add PWA manifest and service worker
 - Implement quality settings for different devices
+- **Build device simulator in editor**
+- **Add touch event visualization**
+- **Create mobile preview mode with different screen sizes**
+- **Implement performance mode switcher**
+- **Add mobile-specific build configuration**
 
-**Deliverable:** Game that runs on desktop, tablet, and mobile with appropriate controls
-
----
-
-### Chapter 26: Advanced Rendering: PBR
-**Concepts:**
-- Physically Based Rendering theory
-- Metallic-roughness workflow
-- Image-based lighting (IBL)
-- Environment probes
-- BRDF and light transport
-- Material authoring
-
-**Implementation Goal:**
-- Implement PBR shader (metallic-roughness)
-- Add IBL with environment maps
-- Create reflection probes
-- Build material editor with PBR parameters
-- Add HDR environment loading
-- Implement tone mapping operators
-
-**Deliverable:** PBR materials with realistic lighting and reflections
+**Deliverable:** Mobile support + in-editor device simulation
 
 ---
 
-### Chapter 27: Data-Oriented Design and ECS
-**Concepts:**
-- Data-oriented design principles
-- Cache coherency and memory layout
-- Entity-Component-System (deep dive)
-- Component storage strategies
-- System scheduling
-- Performance comparisons with OOP
-
-**Implementation Goal:**
-- Refactor to proper ECS architecture
-- Implement archetype-based storage
-- Build query system for components
-- Create system scheduler
-- Add memory pools for components
-- Benchmark against GameObject/Component approach
-
-**Deliverable:** ECS version of engine with performance comparisons
-
----
-
-### Chapter 28: Extending the Engine
-**Concepts:**
-- Plugin architecture
-- Custom component creation
-- Engine events and hooks
-- Module system
-- Community extensions
-- Documentation generation
-
-**Implementation Goal:**
-- Build plugin loading system
-- Create component creation wizard
-- Implement engine event system
-- Add module hot-swap capability
-- Build example plugins (weather system, inventory)
-- Generate API documentation automatically
-
-**Deliverable:** Extensible engine with example plugins
-
----
-
-### Chapter 29: Shipping Your Game
+### Chapter 29: Shipping Your Game + Publishing Tools
 **Concepts:**
 - Publishing to web (itch.io, GitHub Pages, Netlify)
 - Monetization strategies
@@ -646,6 +834,8 @@
 - A/B testing
 - User feedback systems
 - Post-launch support
+- **One-click publishing**
+- **Analytics dashboard**
 
 **Implementation Goal:**
 - Configure production build
@@ -655,8 +845,14 @@
 - Add version checking system
 - Build feedback submission form
 - Set up continuous deployment (CI/CD)
+- **Build export wizard**
+- **Create one-click deploy to common hosts**
+- **Add build optimization recommendations**
+- **Implement analytics dashboard in editor**
+- **Create player feedback viewer**
+- **Build version control integration**
 
-**Deliverable:** Published game with analytics and error tracking
+**Deliverable:** Published game + integrated publishing tools
 
 ---
 
@@ -706,21 +902,29 @@
 - Utility functions
 - Events reference
 
+### Appendix G: Editor Keyboard Shortcuts
+- Navigation shortcuts
+- Transform tool shortcuts
+- Window management shortcuts
+- Scene editing shortcuts
+- Playback controls
+
 ---
 
 ## Project Timeline and Milestones
 
 **Milestone 1 (Chapters 1-2):** Basic engine with 3D rendering and math utilities
-**Milestone 2 (Chapters 3-5):** Component system, scenes, and input
-**Milestone 3 (Chapters 6-7):** Camera systems and resource management
-**Milestone 4 (Chapters 8-11):** Complete rendering pipeline
-**Milestone 5 (Chapters 12-14):** Physics and interaction
-**Milestone 6 (Chapters 15-16):** Animation and audio
-**Milestone 7 (Chapters 17-19):** Gameplay systems
-**Milestone 8 (Chapters 20-22):** Editor and tools
-**Milestone 9 (Chapters 23-29):** Advanced features and shipping
+**Milestone 2 (Chapter 3):** Component system + **basic editor UI**
+**Milestone 3 (Chapters 4-5):** Scenes, input + **visual scene editing and selection**
+**Milestone 4 (Chapters 6-7):** Cameras, resources + **viewport controls and asset browser**
+**Milestone 5 (Chapters 8-11):** Complete rendering + **visual material, lighting, post-processing, and particle editors**
+**Milestone 6 (Chapters 12-14):** Physics + **visual collision and physics debugging**
+**Milestone 7 (Chapters 15-16):** Animation, audio + **animation timeline and audio mixer**
+**Milestone 8 (Chapters 17-19):** Gameplay systems + **UI editor, script editor, prefab system**
+**Milestone 9 (Chapters 20-24):** Advanced editor features + **gizmos, viewports, undo/redo, custom inspectors**
+**Milestone 10 (Chapters 25-29):** Advanced topics + **specialized editors for networking, procedural, terrain, and publishing**
 
-**Final Project:** Complete 2D or 3D game built entirely with your engine
+**Final Project:** Complete 2D or 3D game built entirely with your engine and edited entirely in your web-based editor
 
 ---
 
@@ -736,15 +940,18 @@
 - Companion videos for complex topics
 - Live coding sessions
 - Deep dives into specific features
+- **Editor workflow tutorials**
 
 ### Community Resources
 - Discord server for questions
 - Showcase gallery
 - Extension marketplace
 - Forum for discussions
+- **User-created editor extensions**
 
 ---
 
-**Total Reading Time:** ~150-200 hours
-**Total Implementation Time:** ~300-500 hours
-**Final Engine Capabilities:** Unity-like web game engine with editor
+**Total Reading Time:** ~160-220 hours
+**Total Implementation Time:** ~350-600 hours
+**Final Engine Capabilities:** Unity-like web game engine with full-featured web-based editor
+**Unique Feature:** Everything runs in the browser - no installation required for developers or players

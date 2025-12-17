@@ -46,7 +46,10 @@ export class Renderer {
         this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
         
         // Position camera
+        this.camera.position.x = 5; // Move camera back so we can see objects at origin
+        this.camera.position.y = 5; // Move camera back so we can see objects at origin
         this.camera.position.z = 5; // Move camera back so we can see objects at origin
+        this.camera.lookAt(new THREE.Vector3(0, 0, 0)); // Look at the center of the scene
         
         // Initialize target position to current camera position
         this.targetCameraPosition = this.camera.position.clone();
