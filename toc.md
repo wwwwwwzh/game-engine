@@ -127,10 +127,10 @@
 - Create input action mapping system
 - Build simple key rebinding interface
 - **Implement viewport mouse interaction**
-- **Add object selection by clicking in viewport**
+- **Add object selection by clicking in viewport and panel**
 - **Create selection highlighting (outline/gizmo)**
-- **Build focus on selected object (F key)**
-- **Add multi-selection (Shift/Ctrl click)**
+- **Build focus on selected object (F key or double click in panel)**
+- **Add multi-selection (Shift/cmd click and mouse drag in scene view and panel)**
 
 **Deliverable:** Character controller responding to customizable input + editor with clickable object selection
 
@@ -148,14 +148,13 @@
 - **Viewport navigation patterns**
 
 **Implementation Goal:**
-- Create Camera component class
-- Implement orbit camera controller
+- Create Camera component class as a wrapper for threeCamera
 - Build first-person camera controller
 - Add third-person camera with collision avoidance
 - Create camera switching system
-- Implement split-screen multi-camera rendering
-- **Add editor camera controller (orbit, pan, zoom)**
-- **Implement viewport navigation (WASD for fly, Alt+drag for orbit)**
+- **Add editor camera controller (view, pan, zoom) exactly like in Unity**
+- integrete https://threejs.org/docs/?q=orbit#TrackballControls and/or https://threejs.org/docs/?q=orbit#OrbitControls
+- **Implement viewport navigation (WASD for fly, Alt+drag for orbiting selected object or world center)**
 - **Create camera gizmo showing view frustum**
 - **Add camera component inspector with FOV, near/far plane controls**
 - **Build viewport toolbar (wireframe, shading modes)**

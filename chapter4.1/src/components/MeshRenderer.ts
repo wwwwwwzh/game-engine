@@ -84,4 +84,55 @@ export class MeshRenderer extends Component {
             }
         }
     }
+
+    /**
+     * Serialize MeshRenderer data
+     */
+    public serialize(): any {
+        const data = super.serialize();
+
+        // Store geometry type (for recreating geometry on load)
+        const geometryType = (this as any).geometryType || 'box';
+
+        // Store material color
+        let color = 0x00ff00;
+        if (this.material && 'color' in this.material) {
+            color = (this.material as any).color.getHex();
+        }
+
+        return {
+            ...data,
+            geometryType,
+            color
+        };
+    }
+
+    /**
+     * Deserialize MeshRenderer data
+     */
+    public deserialize(data: any): void {
+        super.deserialize(data);
+
+        // Store geometry type for later use
+        (this as any).geometryType = data.geometryType || 'box';
+
+        // Create geometry based on type
+        let geometry: THREE.BufferGeometry;
+        switch (data.geometryType) {
+            case 'sphere':
+                geometry = new THREE.SphereGeometry(0.5, 32, 32);
+                break;
+            case 'box':
+            default:
+                geometry = new THREE.BoxGeometry(1, 1, 1);
+        }
+
+        const material = new THREE.MeshPhongMaterial({
+            color: data.color || 0x00ff00,
+            shininess: 100
+        });
+
+        this.setGeometry(geometry);
+        this.setMaterial(material);
+    }
 }

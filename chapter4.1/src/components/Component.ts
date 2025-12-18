@@ -1,12 +1,13 @@
 import type { GameObject } from '../core/GameObject';
+import type { ISerializable } from '../core/ISerializable';
 
 /**
  * Base class for all components.
  * Components add behavior and properties to GameObjects.
- * 
+ *
  * This is ENGINE code - it runs in both editor and runtime.
  */
-export abstract class Component {
+export abstract class Component implements ISerializable {
     /**
      * The GameObject this component is attached to.
      * Set automatically when component is added to a GameObject.
@@ -84,5 +85,26 @@ export abstract class Component {
      */
     public getTypeName(): string {
         return this.constructor.name;
+    }
+
+    /**
+     * Serialize this component to JSON
+     * Override in derived classes to add custom data
+     */
+    public serialize(): any {
+        return {
+            type: this.getTypeName(),
+            enabled: this.enabled
+        };
+    }
+
+    /**
+     * Deserialize data into this component
+     * Override in derived classes to restore custom data
+     */
+    public deserialize(data: any): void {
+        if (data.enabled !== undefined) {
+            this.enabled = data.enabled;
+        }
     }
 }

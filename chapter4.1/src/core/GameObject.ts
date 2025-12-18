@@ -2,10 +2,11 @@ import * as THREE from 'three/webgpu';
 import { Component } from '../components/Component';
 import { Transform } from '../components/Transform';
 import type { Scene } from './Scene';
+import type { ISerializable } from './ISerializable';
 
 let nextId = 1;
 
-export class GameObject {
+export class GameObject implements ISerializable {
     public readonly id: string;
     public name: string;
     public tag: string = 'Untagged';
@@ -252,5 +253,47 @@ export class GameObject {
         if (index !== -1) {
             this._children.splice(index, 1);
         }
+    }
+
+    // ===== SERIALIZATION =====
+
+    /**
+     * Serialize this GameObject and its children to JSON
+     */
+    public serialize(): any {
+        const data: any = {
+            name: this.name,
+            tag: this.tag,
+            active: this.active,
+            transform: this.transform.serialize(),
+            components: [],
+            children: this._children.map(child => child.serialize())
+        };
+
+        // Serialize components (skip Transform, it's handled separately)
+        for (const component of this.components) {
+            if (component.getTypeName() === 'Transform') continue;
+            data.components.push(component.serialize());
+        }
+
+        return data;
+    }
+
+    /**
+     * Deserialize data into this GameObject
+     * Note: This does not handle parent-child relationships
+     */
+    public deserialize(data: any): void {
+        this.name = data.name || 'GameObject';
+        this.tag = data.tag || 'Untagged';
+        this.active = data.active !== false;
+
+        // Deserialize transform
+        if (data.transform) {
+            this.transform.deserialize(data.transform);
+        }
+
+        // Note: Components and children are handled by SceneSerializer
+        // because they require component type resolution
     }
 }

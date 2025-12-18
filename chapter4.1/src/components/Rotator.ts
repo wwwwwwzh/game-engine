@@ -34,4 +34,29 @@ export class Rotator extends Component {
                 break;
         }
     }
+
+    /**
+     * Serialize Rotator data
+     */
+    public serialize(): any {
+        return {
+            ...super.serialize(),
+            speed: this.speed,
+            axis: this.axis
+        };
+    }
+
+    /**
+     * Deserialize Rotator data
+     */
+    public deserialize(data: any): void {
+        super.deserialize(data);
+
+        if (data.speed !== undefined) {
+            this.speed = data.speed;
+        }
+        if (data.axis !== undefined) {
+            this.axis = data.axis;
+        }
+    }
 }

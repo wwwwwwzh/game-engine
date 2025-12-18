@@ -146,4 +146,46 @@ export class Transform extends Component {
     public lookAt(target: THREE.Vector3): void {
         this.object3D.lookAt(target);
     }
+
+    /**
+     * Serialize transform data
+     */
+    public serialize(): any {
+        return {
+            type: this.getTypeName(),
+            enabled: this.enabled,
+            position: {
+                x: this.localPosition.x,
+                y: this.localPosition.y,
+                z: this.localPosition.z
+            },
+            rotation: {
+                x: this.localRotation.x,
+                y: this.localRotation.y,
+                z: this.localRotation.z
+            },
+            scale: {
+                x: this.localScale.x,
+                y: this.localScale.y,
+                z: this.localScale.z
+            }
+        };
+    }
+
+    /**
+     * Deserialize transform data
+     */
+    public deserialize(data: any): void {
+        super.deserialize(data);
+
+        if (data.position) {
+            this.object3D.position.set(data.position.x, data.position.y, data.position.z);
+        }
+        if (data.rotation) {
+            this.object3D.rotation.set(data.rotation.x, data.rotation.y, data.rotation.z);
+        }
+        if (data.scale) {
+            this.object3D.scale.set(data.scale.x, data.scale.y, data.scale.z);
+        }
+    }
 }
