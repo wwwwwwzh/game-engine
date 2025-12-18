@@ -131,21 +131,14 @@ export class GameObject {
             return;
         }
 
-        // Check for circular reference
+        // Check for circular reference, this and above are acutally not possible from hierarchy UI
         if (newParent && this.isAncestorOf(newParent)) {
             console.warn('Cannot create circular parent reference');
             return;
         }
 
-        // Update scene's root list BEFORE changing parent
-        if (this.scene) {
-            if (this._parent === null && newParent !== null) {
-                // Was root, now has parent
-                this.scene._removeFromRoots(this);
-            } else if (this._parent !== null && newParent === null) {
-                // Had parent, now root
-                this.scene._addToRoots(this);
-            }
+        if (newParent === this._parent) {
+            return; // No change
         }
 
         // Remove from old parent's GameObject hierarchy
@@ -154,6 +147,7 @@ export class GameObject {
         }
 
         // Update GameObject parent
+        const oldParent = this._parent;
         this._parent = newParent;
 
         // Add to new parent's GameObject hierarchy
@@ -161,9 +155,9 @@ export class GameObject {
             newParent._addChild(this);
         }
 
-        // Update Three.js Object3D hierarchy
+        // Update Three.js Object3D hierarchy FIRST
         if (newParent) {
-            // Add to new parent's Object3D
+            // Add to new parent's Object3D (attach preserves world transform)
             newParent.object3D.attach(this.object3D);
 
             // If NOT preserving world position, reset to local
@@ -175,6 +169,17 @@ export class GameObject {
         } else {
             // Becoming root - remove from current parent in Three.js
             this.object3D.removeFromParent();
+        }
+
+        // Update scene's root list AFTER updating Object3D hierarchy
+        if (this.scene) {
+            if (oldParent === null && newParent !== null) {
+                // Was root, now has parent
+                this.scene._removeFromRoots(this);
+            } else if (oldParent !== null && newParent === null) {
+                // Had parent, now root
+                this.scene._addToRoots(this);
+            }
         }
     }
 
