@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { exponentialDecayVector3 } from '../math/Vector3Utils';
 import type { Scene } from '../core/Scene';
 import { MeshRenderer } from '../components/MeshRenderer';
@@ -9,10 +9,12 @@ import { MeshRenderer } from '../components/MeshRenderer';
  * This is ENGINE code - works in both editor and runtime.
  */
 export class Renderer {
-    private renderer: THREE.WebGLRenderer;
+    private renderer: THREE.WebGPURenderer;
     private threeScene: THREE.Scene;  // Renamed to avoid confusion with our Scene class
     private camera: THREE.PerspectiveCamera;
     private canvas: HTMLCanvasElement;
+    private isInitialized: boolean = false;
+
     
     // Current scene being rendered
     private currentScene: Scene | null = null;
@@ -25,15 +27,15 @@ export class Renderer {
         this.canvas = canvas;
         
         // Create WebGL renderer
-        this.renderer = new THREE.WebGLRenderer({
+        this.renderer = new THREE.WebGPURenderer({
             canvas: canvas,
             antialias: true,
-            alpha: false
+            forceWebGL: false  // Let it use WebGPU if available
         });
         
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(window.devicePixelRatio);
-        this.renderer.setClearColor(0x1a1a1a, 1.0);
+        this.renderer.setClearColor(new THREE.Color(0x1a1a1a), 1.0);
         
         // Create Three.js scene (for rendering)
         this.threeScene = new THREE.Scene();
@@ -60,6 +62,22 @@ export class Renderer {
         this.threeScene.add(directionalLight);
         
         console.log('🎨 Renderer initialized');
+
+        // Initialize the renderer (async for WebGPU)
+        this.initializeRenderer();
+    }
+
+    private async initializeRenderer(): Promise<void> {
+        try {
+            await this.renderer.init();
+            this.isInitialized = true;
+            
+            // Check which backend is being used
+            const backend = this.renderer.backend;
+            console.log(`   Backend: ${backend.constructor.name}`);
+        } catch (error) {
+            console.error('Failed to initialize renderer:', error);
+        }
     }
     
     /**
@@ -186,6 +204,7 @@ export class Renderer {
      * Render the current frame
      */
     public render(): void {
+        if (!this.isInitialized) return;
         this.renderer.render(this.threeScene, this.camera);
     }
     

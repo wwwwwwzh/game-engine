@@ -1,3 +1,4 @@
+import * as THREE from 'three/webgpu';
 import { GameObject } from './GameObject';
 
 export class Scene {
@@ -6,8 +7,20 @@ export class Scene {
     private allGameObjects: Map<string, GameObject> = new Map();
     private _loaded: boolean = false;
 
+    // Three.js scene for rendering
+    private threeScene: THREE.Scene;
+
     constructor(name: string = 'Untitled Scene') {
         this.name = name;
+        this.threeScene = new THREE.Scene();
+        this.threeScene.name = name;
+    }
+
+    /**
+     * Get the Three.js scene for rendering
+     */
+    public getThreeScene(): THREE.Scene {
+        return this.threeScene;
     }
 
     // lifecycle methods
@@ -60,6 +73,9 @@ export class Scene {
 
         if (!gameObject.parent) {
             this.rootGameObjects.push(gameObject);
+
+            // Add to Three.js scene
+            this.threeScene.add(gameObject.getObject3D());
         }
 
         // Also register all children
@@ -74,6 +90,9 @@ export class Scene {
         const rootIndex = this.rootGameObjects.indexOf(gameObject);
         if (rootIndex !== -1) {
             this.rootGameObjects.splice(rootIndex, 1);
+
+            // Remove from Three.js scene
+            this.threeScene.remove(gameObject.getObject3D());
         }
 
         gameObject.scene = null;
@@ -83,6 +102,9 @@ export class Scene {
     public _addToRoots(gameObject: GameObject): void {
         if (!this.rootGameObjects.includes(gameObject)) {
             this.rootGameObjects.push(gameObject);
+
+            // Add to Three.js scene
+            this.threeScene.add(gameObject.getObject3D());
         }
     }
 
@@ -90,6 +112,9 @@ export class Scene {
         const index = this.rootGameObjects.indexOf(gameObject);
         if (index !== -1) {
             this.rootGameObjects.splice(index, 1);
+
+            // Remove from Three.js scene
+            this.threeScene.remove(gameObject.getObject3D());
         }
     }
 
