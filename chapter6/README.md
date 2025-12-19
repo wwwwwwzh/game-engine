@@ -876,7 +876,7 @@ export class EditorUI {
 }
 ```
 
-### Step 7: Add Camera Inspector
+### Step 5: Add Camera Inspector
 
 Modify `src/editor/InspectorPanel.ts` to handle Camera component:
 
@@ -975,7 +975,7 @@ export class InspectorPanel {
 ```
 
 
-### Step 10: Support Game Camera Rendering
+### Step 6: Support Game Camera Rendering
 
 Modify `src/rendering/Renderer.ts` to use Camera component if present:
 
@@ -1100,7 +1100,7 @@ export class Engine {
 }
 ```
 
-### Step 11: Camera Gizmo for Frustum Visualization
+### Step 7: Camera Gizmo for Frustum Visualization
 
 To help visualize camera frustums in the editor, we've added a `CameraGizmo` that automatically shows wireframe frustums for all Camera components in the scene.
 
@@ -1158,7 +1158,7 @@ export class CameraGizmo {
 }
 ```
 
-### Step 12: Camera Preview Overlay
+### Step 8: Camera Preview Overlay
 
 When a GameObject with a Camera component is selected, we show a non-interactive preview of what that camera sees in the bottom-right corner.
 
@@ -1212,7 +1212,7 @@ export class CameraPreview {
 }
 ```
 
-### Step 13: Adding Camera Component via Inspector
+### Step 9: Adding Camera Component via Inspector
 
 Instead of dedicated camera creation buttons, we now allow adding a Camera component to any GameObject through the Inspector panel.
 
@@ -1250,6 +1250,8 @@ private showAddComponentMenu(go: any, buttonElement: HTMLElement): void {
     menu.appendChild(cameraOption);
 }
 ```
+
+### Step 10: Adding View Port Gizmo
 
 ## Testing the Camera System
 
