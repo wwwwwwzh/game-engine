@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Engine - Chapter 6</title>
+    <link rel="stylesheet" href="/src/styles/editor.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Hierarchy Panel -->
+        <div id="hierarchy-panel" class="panel">
+            <div class="panel-header">
+                <span>Hierarchy</span>
+            </div>
+            <div class="panel-content" id="hierarchy-content"></div>
+        </div>
+        
+        <!-- Viewport -->
+        <div id="viewport-container">
+            <div id="toolbar">
+                <div class="toolbar-group">
+                    <button class="btn primary" id="play-btn">▶ Play</button>
+                    <button class="btn" id="stop-btn" disabled>⏹ Stop</button>
+                </div>
+                
+                <div class="toolbar-separator"></div>
+                
+                <div class="toolbar-group">
+                    <button class="btn" id="add-cube-btn">+ Cube</button>
+                    <button class="btn" id="add-sphere-btn">+ Sphere</button>
+                    <button class="btn" id="add-empty-btn">+ Empty</button>
+                    <button class="btn" id="add-player-btn">+ Player</button>
+                </div>
+
+                <div class="toolbar-separator"></div>
+                
+                <div class="toolbar-group">
+                    <button class="btn" id="save-btn">💾 Save</button>
+                    <button class="btn" id="load-btn">📂 Load</button>
+                </div>
+                
+                <div class="toolbar-spacer"></div>
+                
+                <div id="stats">
+                    FPS: <span id="fps">0</span> | 
+                    Mode: <span id="mode">EDITOR</span>
+                </div>
+            </div>
+            
+            <canvas id="game-canvas"></canvas>
+        </div>
+        
+        <!-- Inspector Panel -->
+        <div id="inspector-panel" class="panel">
+            <div class="panel-header">Inspector</div>
+            <div class="panel-content" id="inspector-content"></div>
+        </div>
+    </div>
+    
+    <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

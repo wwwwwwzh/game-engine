@@ -173,20 +173,21 @@
 - Hot-reloading for development
 - **Visual asset management**
 - **Asset thumbnails and previews**
+- project management (open save close load project, file system synchronization with project panel)
 
 **Implementation Goal:**
 - Build AssetManager class
 - Implement texture loading and caching
 - Add 3D model loading (GLTF/OBJ support)
-- Create async asset loading with progress tracking
 - Implement asset reference system
-- Add hot-reload functionality for development
-- **Create asset browser panel in editor**
+<!-- - Add hot-reload functionality for development  -->
+- The whole project should now be savable with cmd s and should sync with the computer's file system using File System Access API
+- **Create project panel in editor**
 - **Generate and display asset thumbnails**
 - **Implement drag-and-drop from browser to scene**
 - **Add asset preview window**
 - **Build asset import dialog with settings**
-- **Add asset search/filter functionality**
+<!-- - **Add asset search/filter functionality** -->
 
 **Deliverable:** Asset loading system + visual asset browser with drag-and-drop
 
