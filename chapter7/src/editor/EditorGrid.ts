@@ -1,4 +1,5 @@
 import * as THREE from 'three/webgpu';
+import { EditorObjectRegistry } from './EditorObjectRegistry';
 
 /**
  * EditorGrid - Renders a coordinate grid in the editor.
@@ -16,6 +17,9 @@ export class EditorGrid {
         // Make grid non-raycastable for better performance
         this.gridHelper.raycast = () => {};
 
+        // Register as editor object
+        EditorObjectRegistry.register(this.gridHelper);
+
         // Create axes helper (size)
         // Red = X axis, Green = Y axis, Blue = Z axis
         this.axesHelper = new THREE.AxesHelper(5);
@@ -23,6 +27,9 @@ export class EditorGrid {
 
         // Make axes non-raycastable
         this.axesHelper.raycast = () => {};
+
+        // Register as editor object
+        EditorObjectRegistry.register(this.axesHelper);
     }
 
     /**

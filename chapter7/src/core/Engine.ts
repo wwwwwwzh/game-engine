@@ -166,7 +166,10 @@ export class Engine {
     }
     
     private onResize(): void {
-        this.renderer.onResize(window.innerWidth, window.innerHeight);
+        // Use canvas actual size, not window size
+        const width = this.canvas.clientWidth;
+        const height = this.canvas.clientHeight;
+        this.renderer.onResize(width, height);
     }
     
     public start(): void {

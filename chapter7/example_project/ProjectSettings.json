@@ -1,0 +1,10 @@
+{
+  "name": "MyGame",
+  "version": "1.0.0",
+  "engineVersion": "0.7.0",
+  "created": "2025-12-19T17:18:46.503Z",
+  "modified": "2025-12-19T17:38:17.984Z",
+  "scenes": {
+    "DefaultScene": "Assets/Scenes/DefaultScene.json"
+  }
+}

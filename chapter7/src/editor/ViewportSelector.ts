@@ -2,6 +2,7 @@ import * as THREE from 'three/webgpu';
 import type { Engine } from '../core/Engine';
 import type { EditorUI } from './EditorUI';
 import type { Scene } from '../core/Scene';
+import { EditorObjectRegistry } from './EditorObjectRegistry';
 
 /**
  * ViewportSelector - Handles clicking objects in the 3D viewport.
@@ -52,11 +53,12 @@ export class ViewportSelector {
 
         if (intersects.length > 0) {
             // Filter out editor-only objects (grid, axes, helpers)
+            // Use EditorObjectRegistry for consistent checking
             let clickedObject3D = null;
             for (const intersect of intersects) {
                 const obj = intersect.object;
-                // Skip editor helpers - check the object and its parents
-                if (this.isEditorHelper(obj)) {
+                // Skip editor helpers
+                if (EditorObjectRegistry.isEditorObject(obj)) {
                     continue;
                 }
                 clickedObject3D = obj;
@@ -88,26 +90,6 @@ export class ViewportSelector {
             // Clicked empty space - deselect
             this.editorUI.selectObject(null);
         }
-    }
-
-    /**
-     * Check if an object is an editor helper (grid, axes, lights, etc.)
-     */
-    private isEditorHelper(object: THREE.Object3D): boolean {
-        // Check if this object or any parent is an editor helper
-        let current: THREE.Object3D | null = object;
-        while (current) {
-            if (current.name === 'EditorGrid' ||
-                current.name === 'EditorAxes' ||
-                current.type === 'GridHelper' ||
-                current.type === 'AxesHelper' ||
-                current.type === 'DirectionalLight' ||
-                current.type === 'AmbientLight') {
-                return true;
-            }
-            current = current.parent;
-        }
-        return false;
     }
 
     /**

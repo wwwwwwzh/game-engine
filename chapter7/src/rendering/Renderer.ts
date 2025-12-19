@@ -24,13 +24,17 @@ export class Renderer {
             forceWebGL: false  // Let it use WebGPU if available
         });
 
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        // Use canvas actual size, not window size
+        const width = canvas.clientWidth || window.innerWidth;
+        const height = canvas.clientHeight || window.innerHeight;
+
+        this.renderer.setSize(width, height);
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.setClearColor(new THREE.Color(0x1a1a1a), 1.0);
 
         // Create editor camera
         const fov = 50;
-        const aspect = window.innerWidth / window.innerHeight;
+        const aspect = width / height;
         const near = 0.1;
         const far = 1000;
         this.editorCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);

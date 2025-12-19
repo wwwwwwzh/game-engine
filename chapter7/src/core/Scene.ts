@@ -1,6 +1,7 @@
 import * as THREE from 'three/webgpu';
 import { GameObject } from './GameObject';
 import type { Component } from '../components/Component';
+import { EditorObjectRegistry } from '../editor/EditorObjectRegistry';
 
 export class Scene {
     public name: string;
@@ -48,10 +49,27 @@ export class Scene {
     }
 
     // Unload the scene and destroy all GameObjects
+    // Note: Does not destroy editor-only objects (grid, gizmos, etc.)
     public unload(): void {
+        console.log('Unloading scene:', this.name);
+
+        // Only destroy actual game objects, not editor helpers
         for (const go of [...this.allGameObjects.values()]) {
             go.destroy();
         }
+
+        // Clear the Three.js scene but preserve editor objects
+        // Use EditorObjectRegistry to filter out editor objects
+        const objectsToRemove = EditorObjectRegistry.filterGameObjects(
+            Array.from(this.threeScene.children)
+        );
+        console.log('Removing', objectsToRemove.length, 'game objects from scene');
+
+        // Remove game objects from Three.js scene
+        for (const obj of objectsToRemove) {
+            this.threeScene.remove(obj);
+        }
+
         this.rootGameObjects = [];
         this.allGameObjects.clear();
         this._loaded = false;

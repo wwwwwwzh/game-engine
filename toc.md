@@ -193,7 +193,7 @@
 
 ---
 
-## PART III: RENDERING SYSTEMS WITH VISUAL EDITORS
+## PART III: RENDERING SYSTEMS WITH VISUAL EDITORS (THEORY CENTRIC)
 
 ### Chapter 8: Materials and Shaders + Material Editor
 **Concepts:**
@@ -237,17 +237,14 @@
 
 **Implementation Goal:**
 - Create Light component base class
-- Implement DirectionalLight, PointLight, SpotLight components
+- Wrap DirectionalLight, PointLight, SpotLight components
 - Build Phong/Blinn-Phong lighting shader
 - Add support for multiple dynamic lights
-- Implement light culling for performance
+- Implement basic light culling
 - Create ambient occlusion approximation
-- **Add light gizmos in viewport (direction arrows, range spheres)**
 - **Create light component inspector with controls**
 - **Implement color picker for light color**
 - **Add intensity/range sliders**
-- **Build light visualization modes (show range, show direction)**
-- **Create light presets (sunset, noon, night)**
 
 **Deliverable:** Scene with multiple light types + editor with visual light manipulation
 
@@ -256,7 +253,7 @@
 ### Chapter 10: Advanced Rendering + Post-Processing Editor
 **Concepts:**
 - Shadow mapping (directional, point, cascade)
-- Skyboxes and environment maps
+- Skyboxes and environment maps (panoramic, 6 sides, cubic)
 - Fog and atmospheric effects
 - Post-processing pipeline
 - Bloom, color grading, tone mapping

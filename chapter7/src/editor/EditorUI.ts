@@ -12,6 +12,10 @@ import { CameraGizmo } from './CameraGizmo';
 import { CameraPreview } from './CameraPreview';
 import { ViewportGizmo } from './ViewportGizmo';
 import { Camera } from '../components/Camera';
+import { ProjectPanel } from './ProjectPanel';
+import { Project } from '../core/Project';
+import { AssetManager } from '../core/AssetManager';
+import { FileSystemManager } from '../core/FileSystemManager';
 
 export class EditorUI {
     private engine: Engine;
@@ -24,15 +28,25 @@ export class EditorUI {
     private cameraPreview: CameraPreview;
     private viewportGizmo: ViewportGizmo;
 
+    // Project system components
+    private projectPanel: ProjectPanel;
+    private project: Project | null = null;
+    private fileSystem: FileSystemManager;
+    private assetManager: AssetManager;
+
     private playButton: HTMLButtonElement;
     private stopButton: HTMLButtonElement;
     private addCubeButton: HTMLButtonElement;
     private addSphereButton: HTMLButtonElement;
     private addEmptyButton: HTMLButtonElement;
     private addPlayerButton: HTMLButtonElement;
-    private saveButton: HTMLButtonElement;
-    private loadButton: HTMLButtonElement;
+    // private saveButton: HTMLButtonElement;
+    // private loadButton: HTMLButtonElement;
     private modeElement: HTMLElement;
+
+    // Project buttons
+    private openProjectButton: HTMLButtonElement;
+    private newProjectButton: HTMLButtonElement;
 
     private selectedObjectId: string | null = null;
 
@@ -45,9 +59,13 @@ export class EditorUI {
         this.addSphereButton = document.getElementById('add-sphere-btn') as HTMLButtonElement;
         this.addEmptyButton = document.getElementById('add-empty-btn') as HTMLButtonElement;
         this.addPlayerButton = document.getElementById('add-player-btn') as HTMLButtonElement;
-        this.saveButton = document.getElementById('save-btn') as HTMLButtonElement;
-        this.loadButton = document.getElementById('load-btn') as HTMLButtonElement;
+        // this.saveButton = document.getElementById('save-btn') as HTMLButtonElement;
+        // this.loadButton = document.getElementById('load-btn') as HTMLButtonElement;
         this.modeElement = document.getElementById('mode') as HTMLElement;
+
+        // Get project buttons
+        this.openProjectButton = document.getElementById('open-project-btn') as HTMLButtonElement;
+        this.newProjectButton = document.getElementById('new-project-btn') as HTMLButtonElement;
 
         this.hierarchyPanel = new HierarchyPanel(this);
         this.inspectorPanel = new InspectorPanel(this);
@@ -87,9 +105,91 @@ export class EditorUI {
             this.editorCameraController.alignToView(direction, viewName);
         });
 
+        // Initialize file system and asset manager
+        this.fileSystem = new FileSystemManager();
+        this.assetManager = new AssetManager();
+
+        // Create project panel
+        this.projectPanel = new ProjectPanel(this, this.assetManager);
+
+        // Add project panel to UI
+        this.addProjectPanelToUI();
+
         this.setupEventListeners();
 
+        // Setup keyboard shortcuts (including Cmd/Ctrl+S)
+        this.setupKeyboardShortcuts();
+
         console.log('🎨 Editor UI initialized');
+    }
+
+    /**
+     * Add project panel to the bottom of the viewport container
+     */
+    private addProjectPanelToUI(): void {
+        // Create project panel container
+        const container = document.createElement('div');
+        container.id = 'project-panel';
+        container.className = 'panel';
+        container.style.borderTop = '1px solid #3a3a3a';
+        container.style.height = '250px';
+        container.style.minHeight = '250px';
+        container.style.maxHeight = '250px';
+        container.style.flexShrink = '0';
+        container.style.display = 'flex';
+        container.style.flexDirection = 'column';
+        container.style.overflow = 'hidden';
+
+        // Panel header
+        const header = document.createElement('div');
+        header.className = 'panel-header';
+        header.textContent = 'Project';
+
+        container.appendChild(header);
+        container.appendChild(this.projectPanel.getElement());
+
+        // Add to viewport container
+        const viewportContainer = document.getElementById('viewport-container');
+        if (viewportContainer) {
+            viewportContainer.appendChild(container);
+        }
+
+        // Trigger resize to adjust canvas after adding project panel
+        setTimeout(() => {
+            window.dispatchEvent(new Event('resize'));
+        }, 0);
+    }
+
+    /**
+     * Re-add editor objects to the current scene.
+     * Call this after loading a new scene to restore grid, gizmos, etc.
+     */
+    private reAddEditorObjects(): void {
+        const scene = this.engine.getScene();
+        if (!scene) return;
+
+        const threeScene = scene.getThreeScene();
+
+        // Re-add default lighting (same as Renderer constructor)
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        threeScene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
+        directionalLight.position.set(5, 10, 7.5);
+        threeScene.add(directionalLight);
+
+        // Re-add editor grid
+        this.editorGrid.addToScene(threeScene);
+
+        // Recreate camera gizmo with new scene
+        this.cameraGizmo = new CameraGizmo(threeScene);
+
+        // Re-add viewport gizmo
+        if (this.viewportGizmo) {
+            threeScene.add(this.viewportGizmo.getObject3D());
+        }
+
+        console.log('✅ Editor objects re-added to scene');
     }
 
     private setupEventListeners(): void {
@@ -99,8 +199,44 @@ export class EditorUI {
         this.addSphereButton.addEventListener('click', () => this.onAddSphere());
         this.addEmptyButton.addEventListener('click', () => this.onAddEmpty());
         this.addPlayerButton.addEventListener('click', () => this.onAddPlayer());
-        this.saveButton.addEventListener('click', () => this.onSave());
-        this.loadButton.addEventListener('click', () => this.onLoad());
+
+        // OLD save/load are now scene-only (will be deprecated)
+        // this.saveButton.addEventListener('click', () => this.onSaveScene());
+        // this.loadButton.addEventListener('click', () => this.onLoadScene());
+
+        // Project buttons
+        this.openProjectButton.addEventListener('click', () => this.onOpenProject());
+        this.newProjectButton.addEventListener('click', () => this.onNewProject());
+    }
+
+    /**
+     * Setup keyboard shortcuts for common actions
+     */
+    private setupKeyboardShortcuts(): void {
+        document.addEventListener('keydown', (e) => {
+            // Cmd/Ctrl+S to save project
+            if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+                e.preventDefault();
+                this.onSaveProject();
+            }
+
+            // Cmd/Ctrl+O to open project
+            if ((e.metaKey || e.ctrlKey) && e.key === 'o') {
+                e.preventDefault();
+                this.onOpenProject();
+            }
+
+            // Cmd/Ctrl+N to new project
+            if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
+                e.preventDefault();
+                this.onNewProject();
+            }
+        });
+
+        console.log('⌨️ Keyboard shortcuts registered');
+        console.log('   Cmd/Ctrl+S: Save project');
+        console.log('   Cmd/Ctrl+O: Open project');
+        console.log('   Cmd/Ctrl+N: New project');
     }
 
     private onPlay(): void {
@@ -130,8 +266,8 @@ export class EditorUI {
         this.addSphereButton.disabled = !enabled;
         this.addEmptyButton.disabled = !enabled;
         this.addPlayerButton.disabled = !enabled;
-        this.saveButton.disabled = !enabled;
-        this.loadButton.disabled = !enabled;
+        // this.saveButton.disabled = !enabled;
+        // this.loadButton.disabled = !enabled;
     }
 
     private onAddCube(): void {
@@ -175,45 +311,260 @@ export class EditorUI {
         this.refresh();
     }
 
-    private onSave(): void {
-        const scene = this.engine.getScene();
-        if (!scene) return;
+    /**
+     * Open an existing project
+     */
+    private async onOpenProject(): Promise<void> {
+        console.log('Opening project...');
 
-        const json = SceneSerializer.serialize(scene);
+        // Request directory access
+        const success = await this.fileSystem.openDirectory();
+        if (!success) {
+            console.log('Open project cancelled');
+            return;
+        }
 
-        // Download as file
-        const blob = new Blob([json], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${scene.name}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
+        // Create project instance
+        this.project = new Project('LoadedProject', this.fileSystem);
 
-        console.log('💾 Scene saved:', scene.name);
+        // Try to load project
+        const loaded = await this.project.load();
+        if (!loaded) {
+            alert('This directory does not appear to be a valid project.\n\nUse "New Project" to create a project in this folder.');
+            this.project = null;
+            return;
+        }
+
+        // Update project panel
+        this.projectPanel.setProject(this.project);
+
+        // Load the first scene (or default scene)
+        const sceneNames = this.project.getSceneNames();
+        if (sceneNames.length > 0) {
+            const firstScenePath = this.project.getScenePath(sceneNames[0]);
+            if (firstScenePath) {
+                const scene = await this.project.loadScene(firstScenePath);
+                if (scene) {
+                    this.engine.loadScene(scene);
+                    this.project.setCurrentScene(scene, firstScenePath);
+                    this.reAddEditorObjects();
+                    this.refresh();
+                }
+            }
+        }
+
+        console.log(`✅ Project opened: ${this.project.name}`);
+        console.log(`   Directory: ${this.fileSystem.getDirectoryName()}`);
+        console.log(`   Scenes: ${sceneNames.join(', ')}`);
     }
 
-    private onLoad(): void {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.json';
+    /**
+     * Create a new project
+     */
+    private async onNewProject(): Promise<void> {
+        console.log('Creating new project...');
 
-        input.addEventListener('change', async () => {
-            const file = input.files?.[0];
-            if (!file) return;
+        // Request directory access
+        const success = await this.fileSystem.openDirectory();
+        if (!success) {
+            console.log('New project cancelled');
+            return;
+        }
 
-            const json = await file.text();
-            const scene = this.engine.getScene();
-            if (!scene) return;
+        // Ask for project name
+        const name = prompt('Project name:', 'MyGame');
+        if (!name) {
+            console.log('New project cancelled (no name)');
+            return;
+        }
 
-            SceneSerializer.deserialize(json, scene);
-            this.selectObject(null);
+        // Create project
+        this.project = new Project(name, this.fileSystem);
+        const created = await this.project.create();
+
+        if (!created) {
+            alert('Failed to create project. Check console for errors.');
+            this.project = null;
+            return;
+        }
+
+        // Update project panel
+        this.projectPanel.setProject(this.project);
+
+        // Load the default scene that was created
+        if (this.project.currentScene) {
+            this.engine.loadScene(this.project.currentScene);
+            this.reAddEditorObjects();
             this.refresh();
+        }
 
-            console.log('📂 Scene loaded:', scene.name);
+        console.log(`✅ Project created: ${name}`);
+        console.log(`   Directory: ${this.fileSystem.getDirectoryName()}`);
+    }
+
+    /**
+     * Save the entire project (Cmd/Ctrl+S)
+     */
+    private async onSaveProject(): Promise<void> {
+        if (!this.project) {
+            console.warn('No project to save');
+            alert('No project open. Create or open a project first.');
+            return;
+        }
+
+        console.log('Saving project...');
+
+        // Save current scene
+        if (this.project.currentScene) {
+            const saved = await this.project.saveCurrentScene();
+            if (!saved) {
+                alert('Failed to save scene. Check console for errors.');
+                return;
+            }
+        }
+
+        // Save project settings
+        const settingsSaved = await this.project.saveProjectSettings();
+        if (!settingsSaved) {
+            alert('Failed to save project settings. Check console for errors.');
+            return;
+        }
+
+        console.log('💾 Project saved successfully');
+
+        // Visual feedback
+        this.showSaveConfirmation();
+    }
+
+    /**
+     * Show visual confirmation that save succeeded
+     */
+    private showSaveConfirmation(): void {
+        // Create temporary notification
+        const notification = document.createElement('div');
+        notification.style.position = 'fixed';
+        notification.style.bottom = '20px';
+        notification.style.right = '20px';
+        notification.style.padding = '12px 20px';
+        notification.style.background = '#4CAF50';
+        notification.style.color = 'white';
+        notification.style.borderRadius = '4px';
+        notification.style.boxShadow = '0 4px 6px rgba(0,0,0,0.3)';
+        notification.style.zIndex = '10000';
+        notification.style.fontSize = '14px';
+        notification.style.fontWeight = '500';
+        notification.textContent = '✓ Project saved';
+
+        document.body.appendChild(notification);
+
+        // Fade out and remove after 2 seconds
+        setTimeout(() => {
+            notification.style.transition = 'opacity 0.3s';
+            notification.style.opacity = '0';
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 300);
+        }, 2000);
+    }
+
+    /**
+     * Save scene only (old behavior, now part of project save)
+     */
+    private async onSaveScene(): Promise<void> {
+        // if (!this.project) {
+        //     // Fallback to old download behavior if no project
+        //     const scene = this.engine.getScene();
+        //     if (!scene) return;
+
+        //     const json = SceneSerializer.serialize(scene);
+        //     const blob = new Blob([json], { type: 'application/json' });
+        //     const url = URL.createObjectURL(blob);
+        //     const a = document.createElement('a');
+        //     a.href = url;
+        //     a.download = `${scene.name}.json`;
+        //     a.click();
+        //     URL.revokeObjectURL(url);
+
+        //     console.log('💾 Scene downloaded (no project open)');
+        //     return;
+        // }
+
+        // // If project is open, save to project
+        // await this.onSaveProject();
+    }
+
+    /**
+     * Load scene only (old behavior, now part of project)
+     */
+    private async onLoadScene(): Promise<void> {
+        // if (!this.project) {
+        //     // Fallback to old upload behavior if no project
+        //     const input = document.createElement('input');
+        //     input.type = 'file';
+        //     input.accept = '.json';
+
+        //     input.addEventListener('change', async () => {
+        //         const file = input.files?.[0];
+        //         if (!file) return;
+
+        //         const json = await file.text();
+        //         const scene = this.engine.getScene();
+        //         if (!scene) return;
+
+        //         SceneSerializer.deserialize(json, scene);
+        //         this.selectObject(null);
+        //         this.refresh();
+
+        //         console.log('📂 Scene loaded from file (no project open)');
+        //     });
+
+        //     input.click();
+        //     return;
+        // }
+
+        // // If project is open, show scene picker
+        // this.showScenePicker();
+    }
+
+    /**
+     * Show a picker to switch between scenes in the project
+     */
+    private showScenePicker(): void {
+        if (!this.project) return;
+
+        const sceneNames = this.project.getSceneNames();
+        if (sceneNames.length === 0) {
+            alert('No scenes in project');
+            return;
+        }
+
+        // Simple prompt for now (TODO: build proper UI picker)
+        const choice = prompt(
+            `Select scene to load:\n\n${sceneNames.map((n, i) => `${i + 1}. ${n}`).join('\n')}`,
+            '1'
+        );
+
+        if (!choice) return;
+
+        const index = parseInt(choice) - 1;
+        if (index < 0 || index >= sceneNames.length) {
+            alert('Invalid choice');
+            return;
+        }
+
+        const sceneName = sceneNames[index];
+        const scenePath = this.project.getScenePath(sceneName);
+        if (!scenePath) return;
+
+        // Load the scene
+        this.project.loadScene(scenePath).then(scene => {
+            if (scene) {
+                this.engine.loadScene(scene);
+                this.project!.setCurrentScene(scene, scenePath);
+                this.refresh();
+                console.log(`✅ Loaded scene: ${sceneName}`);
+            }
         });
-
-        input.click();
     }
 
     public getEngine(): Engine {
@@ -315,5 +666,26 @@ export class EditorUI {
      */
     public handleViewportGizmoClick(raycaster: THREE.Raycaster): boolean {
         return this.viewportGizmo.handleClick(raycaster);
+    }
+
+    /**
+     * Get the asset manager (for other systems to use)
+     */
+    public getAssetManager(): AssetManager {
+        return this.assetManager;
+    }
+
+    /**
+     * Get the current project (for other systems to use)
+     */
+    public getProject(): Project | null {
+        return this.project;
+    }
+
+    /**
+     * Get the file system manager (for other systems to use)
+     */
+    public getFileSystem(): FileSystemManager {
+        return this.fileSystem;
     }
 }

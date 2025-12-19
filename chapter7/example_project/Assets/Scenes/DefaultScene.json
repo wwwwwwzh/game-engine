@@ -1,0 +1,154 @@
+{
+  "name": "DefaultScene",
+  "gameObjects": [
+    {
+      "name": "Cube",
+      "tag": "Untagged",
+      "active": true,
+      "transform": {
+        "type": "Transform",
+        "enabled": true,
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "rotation": {
+          "x": 0,
+          "y": 12.249900000000022,
+          "z": 0
+        },
+        "scale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "components": [
+        {
+          "type": "MeshRenderer",
+          "enabled": true,
+          "geometryType": "box",
+          "color": 65280
+        },
+        {
+          "type": "Rotator",
+          "enabled": true,
+          "speed": 1,
+          "axis": "y"
+        }
+      ],
+      "children": [
+        {
+          "name": "Cube",
+          "tag": "Untagged",
+          "active": true,
+          "transform": {
+            "type": "Transform",
+            "enabled": true,
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 12.249900000000022,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          },
+          "components": [
+            {
+              "type": "MeshRenderer",
+              "enabled": true,
+              "geometryType": "box",
+              "color": 65280
+            },
+            {
+              "type": "Rotator",
+              "enabled": true,
+              "speed": 1,
+              "axis": "y"
+            }
+          ],
+          "children": []
+        }
+      ]
+    },
+    {
+      "name": "Player",
+      "tag": "Untagged",
+      "active": true,
+      "transform": {
+        "type": "Transform",
+        "enabled": true,
+        "position": {
+          "x": -1.7510000000003494,
+          "y": 1,
+          "z": 2.2534999999997662
+        },
+        "rotation": {
+          "x": 0,
+          "y": -0.8999999999999997,
+          "z": 0
+        },
+        "scale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "components": [
+        {
+          "type": "MeshRenderer",
+          "enabled": true,
+          "geometryType": "box",
+          "color": 35071
+        },
+        {
+          "type": "PlayerController",
+          "enabled": true
+        },
+        {
+          "type": "Camera",
+          "enabled": true,
+          "fieldOfView": 60,
+          "nearClipPlane": 0.1,
+          "farClipPlane": 100
+        }
+      ],
+      "children": []
+    },
+    {
+      "name": "totoros.glb",
+      "tag": "Untagged",
+      "active": true,
+      "transform": {
+        "type": "Transform",
+        "enabled": true,
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": -1.4
+        },
+        "rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "scale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "components": [],
+      "children": []
+    }
+  ]
+}

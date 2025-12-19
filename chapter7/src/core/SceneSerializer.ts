@@ -3,6 +3,7 @@ import { GameObject } from './GameObject';
 import { MeshRenderer } from '../components/MeshRenderer';
 import { Rotator } from '../components/Rotator';
 import { Camera } from '../components/Camera';
+import { PlayerController } from '../components/PlayerController';
 
 /**
  * Handles converting scenes to/from JSON format.
@@ -89,6 +90,9 @@ export class SceneSerializer {
         } else if (data.type === 'Camera') {
             const camera = go.addComponent(new Camera());
             camera.deserialize(data);
+        } else if (data.type === 'PlayerController') {
+            const playerController = go.addComponent(new PlayerController());
+            playerController.deserialize(data);
         }
 
         // Add more component types here as needed
