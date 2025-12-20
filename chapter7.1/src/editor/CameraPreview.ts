@@ -1,6 +1,7 @@
 import * as THREE from 'three/webgpu';
 import { Camera } from '../components/Camera';
-import { ServiceLocator } from '../core/ServiceLocator';
+import type { Scene } from '../core/Scene';
+import type { Engine } from '../core/Engine';
 
 /**
  * CameraPreview - Shows a non-interactive preview of a selected camera
@@ -12,8 +13,12 @@ export class CameraPreview {
     private previewRenderer: THREE.WebGPURenderer | null = null;
     private currentCamera: Camera | null = null;
     private isInitialized: boolean = false;
+    private scene: Scene;
+    private engine: Engine;
 
-    constructor() {
+    constructor(scene: Scene, engine: Engine) {
+        this.scene = scene;
+        this.engine = engine;
         // Create preview container
         this.previewContainer = document.createElement('div');
         this.previewContainer.id = 'camera-preview';
@@ -60,6 +65,7 @@ export class CameraPreview {
 
         // Initialize renderer
         this.initializeRenderer();
+
     }
 
     private async initializeRenderer(): Promise<void> {
@@ -96,6 +102,14 @@ export class CameraPreview {
     }
 
     /**
+     * Update the scene being previewed (called when project loads a new scene)
+     */
+    public updateScene(scene: Scene): void {
+        this.scene = scene;
+        console.log('📷 CameraPreview: Scene updated');
+    }
+
+    /**
      * Render the preview
      */
     public render(): void {
@@ -104,18 +118,15 @@ export class CameraPreview {
         }
 
         // Only show preview in editor mode
-        if (ServiceLocator.isPlaying()) {
+        const isPlaying = this.engine.events.invoke('editor.isPlaying') as boolean;
+        if (isPlaying) {
             this.previewContainer.style.display = 'none';
             return;
         }
 
-        // Get the scene
-        const scene = ServiceLocator.getScene();
-        if (!scene) return;
-
         // Render the preview
         this.previewRenderer.render(
-            scene.getThreeScene(),
+            this.scene.getThreeScene(),
             this.currentCamera.threeCamera
         );
     }

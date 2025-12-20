@@ -1,29 +1,30 @@
 import type { EditorUI } from './EditorUI';
 import { Camera } from '../components/Camera';
+import { Scene } from '../core/Scene';
+import { GameObject } from '../core/GameObject';
 
 export class InspectorPanel {
     private editorUI: EditorUI;
     private contentElement: HTMLElement;
+    private scene: Scene | null;
 
-    constructor(editorUI: EditorUI) {
+    constructor(editorUI: EditorUI, scene: Scene | null) {
         this.editorUI = editorUI;
+        this.scene = scene;
         this.contentElement = document.getElementById('inspector-content') as HTMLElement;
+
+        // Listen for scene changes from project
+        this.editorUI.getEngine().events.on('project.sceneChanged', (data: any) => {
+            this.scene = data.scene;
+            this.refresh();
+        });
     }
 
     public refresh(): void {
-        const selectedId = this.editorUI.getSelectedObjectId();
+        const go = this.scene!.events.invoke('selection.get') as GameObject | null;
 
-        if (!selectedId) {
-            this.contentElement.innerHTML = '<div class="empty-state">Select an object to inspect</div>';
-            return;
-        }
-
-        const scene = this.editorUI.getEngine().getScene();
-        if (!scene) return;
-
-        const go = scene.findById(selectedId);
         if (!go) {
-            this.contentElement.innerHTML = '<div class="empty-state">Object not found</div>';
+            this.contentElement.innerHTML = '<div class="empty-state">Select an object to inspect</div>';
             return;
         }
 

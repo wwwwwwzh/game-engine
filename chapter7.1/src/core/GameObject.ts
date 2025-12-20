@@ -3,6 +3,7 @@ import { Component } from '../components/Component';
 import { Transform } from '../components/Transform';
 import type { Scene } from './Scene';
 import type { ISerializable } from './ISerializable';
+import type { Events } from '../events';
 
 let nextId = 1;
 
@@ -11,6 +12,7 @@ export class GameObject implements ISerializable {
     public name: string;
     public tag: string = 'Untagged';
     public scene: Scene | null = null;
+
 
     private _active: boolean = true;
     private _parent: GameObject | null = null;

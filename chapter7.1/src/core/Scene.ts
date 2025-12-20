@@ -2,9 +2,11 @@ import * as THREE from 'three/webgpu';
 import { GameObject } from './GameObject';
 import type { Component } from '../components/Component';
 import { EditorObjectRegistry } from '../editor/EditorObjectRegistry';
+import { Events } from '../events';
 
 export class Scene {
     public name: string;
+    public events: Events;  // Event bus for scene-level events
     private rootGameObjects: GameObject[] = [];
     private allGameObjects: Map<string, GameObject> = new Map();
     private _loaded: boolean = false;
@@ -12,10 +14,14 @@ export class Scene {
     // Three.js scene for rendering
     private threeScene: THREE.Scene;
 
-    constructor(name: string = 'Untitled Scene') {
+    constructor(name: string = 'Untitled Scene', events: Events) {
         this.name = name;
+        this.events = events;
         this.threeScene = new THREE.Scene();
         this.threeScene.name = name;
+
+        // Fire scene created event
+        this.events.fire('scene.created', this);
     }
 
     /**
@@ -43,9 +49,10 @@ export class Scene {
     public get loaded(): boolean {
         return this._loaded;
     }
-    
+
     public load(): void {
         this._loaded = true;
+        this.events.fire('scene.loaded', this);
     }
 
     // Unload the scene and destroy all GameObjects
@@ -73,6 +80,8 @@ export class Scene {
         this.rootGameObjects = [];
         this.allGameObjects.clear();
         this._loaded = false;
+
+        this.events.fire('scene.unloaded', this);
     }
 
     public clear(): void {
@@ -101,6 +110,9 @@ export class Scene {
         for (const child of gameObject.children) {
             this.addGameObject(child);
         }
+
+        // Fire event after object is added
+        this.events.fire('scene.objectAdded', gameObject);
     }
 
     public removeGameObject(gameObject: GameObject): void {
@@ -115,6 +127,9 @@ export class Scene {
         }
 
         gameObject.scene = null;
+
+        // Fire event after object is removed
+        this.events.fire('scene.objectRemoved', gameObject);
     }
 
     // Methods for GameObject reparenting like in Hierarchy panel dragging

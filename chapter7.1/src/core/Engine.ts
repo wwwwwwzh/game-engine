@@ -4,6 +4,7 @@ import { InputManager } from './InputManager';
 import type { EditorCameraController } from '../editor/EditorCameraController';
 import type { EditorUI } from '../editor/EditorUI';
 import { Camera } from '../components/Camera';
+import { Events } from '../events';
 
 /**
  * The core game engine class.
@@ -14,6 +15,7 @@ import { Camera } from '../components/Camera';
  * - Play mode: For running the game
  */
 export class Engine {
+    public events: Events;  // Event bus accessible to all systems
     private canvas: HTMLCanvasElement;
     private renderer: Renderer;
     private inputManager: InputManager;
@@ -29,11 +31,11 @@ export class Engine {
     // Scene management
     private currentScene: Scene | null = null;
 
-    // Editor mode
+    // Editor mode - now managed via events, but kept for internal use
     public isEditorMode: boolean = true;  // Start in editor mode
     public isPlaying: boolean = false;     // Is the game playing?
 
-    // Editor camera
+    // Editor camera - will be accessed via getter
     private editorCameraController: EditorCameraController | null = null;
 
     // Editor UI
@@ -44,15 +46,16 @@ export class Engine {
     private frametimeElement: HTMLElement | null;
     private runtimeElement: HTMLElement | null;
 
-    constructor(canvasId: string = 'game-canvas') {
+    constructor(canvasId: string = 'game-canvas', events: Events) {
+        this.events = events;
         const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
         if (!canvas) {
             throw new Error(`Canvas element with id "${canvasId}" not found`);
         }
         this.canvas = canvas;
 
-        // Create InputManager
-        this.inputManager = new InputManager(this.canvas);
+        // Initialize InputManager singleton
+        this.inputManager = InputManager.initialize(this.canvas);
 
         // Note: Renderer will be created when first scene is loaded
         // This is because Renderer needs the scene's threeScene
@@ -63,6 +66,12 @@ export class Engine {
         this.runtimeElement = document.getElementById('runtime');
 
         window.addEventListener('resize', () => this.onResize());
+
+        // Register engine in events for global access
+        this.events.function('engine', () => this);
+
+        // Register editor camera getter
+        this.events.function('editor.camera', () => this.editorCameraController);
 
         console.log('🎮 Game Engine initialized');
         console.log('📝 Editor Mode: ON');

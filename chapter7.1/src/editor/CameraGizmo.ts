@@ -1,6 +1,7 @@
 import * as THREE from 'three/webgpu';
 import { Camera } from '../components/Camera';
-import { ServiceLocator } from '../core/ServiceLocator';
+import type { Scene } from '../core/Scene';
+import type { Engine } from '../core/Engine';
 
 /**
  * CameraGizmo - Visualizes camera frustums in the editor
@@ -9,9 +10,13 @@ import { ServiceLocator } from '../core/ServiceLocator';
 export class CameraGizmo {
     private gizmos: Map<Camera, THREE.CameraHelper> = new Map();
     private scene: THREE.Scene;
+    private gameScene: Scene;
+    private engine: Engine;
 
-    constructor(scene: THREE.Scene) {
+    constructor(scene: THREE.Scene, gameScene: Scene, engine: Engine) {
         this.scene = scene;
+        this.gameScene = gameScene;
+        this.engine = engine;
     }
 
     /**
@@ -19,16 +24,14 @@ export class CameraGizmo {
      */
     update(): void {
         // Only show gizmos in editor mode
-        if (ServiceLocator.isPlaying()) {
+        const isPlaying = this.engine.events.invoke('editor.isPlaying') as boolean;
+        if (isPlaying) {
             this.hideAll();
             return;
         }
 
-        const sceneObj = ServiceLocator.getScene();
-        if (!sceneObj) return;
-
         // Get all cameras in the scene
-        const cameras = this.getAllCameras(sceneObj);
+        const cameras = this.getAllCameras(this.gameScene);
 
         // Remove gizmos for cameras that no longer exist
         const currentCameras = new Set(cameras);
@@ -79,8 +82,8 @@ export class CameraGizmo {
         helper.update();
 
         // Don't show gizmo for the active rendering camera
-        const renderer = ServiceLocator.getEngine()?.getRenderer();
-        const activeCamera = renderer?.getActiveCamera();
+        const renderer = this.engine.getRenderer();
+        const activeCamera = renderer.getActiveCamera();
         helper.visible = activeCamera !== camera.threeCamera;
     }
 

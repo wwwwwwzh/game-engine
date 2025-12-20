@@ -6,6 +6,8 @@ UI fire events that editor subscribes, which acts as a hub to fire events that s
 
 Scene fires scene change events and editor subscribes
 
+editor camera is a editor object and should be provided with getter. 
+
 
 
 

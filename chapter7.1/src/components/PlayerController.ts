@@ -1,28 +1,26 @@
 import { Component } from './Component';
-import type { Engine } from '../core/Engine';
-import type { InputManager } from '../core/InputManager';
+import { InputManager } from '../core/InputManager';
 
 /**
  * PlayerController - Example component showing game input usage.
  * This is GAME code - only active in play mode.
+ *
+ * Uses InputManager singleton for easy access!
  */
 export class PlayerController extends Component {
     public moveSpeed: number = 5.0;
     public turnSpeed: number = 2.0;
 
-    private input!: InputManager;
+    private input: InputManager = InputManager.getInstance();
 
-    public awake(): void {
-        // Get InputManager from engine
-        // This is a bit awkward - we'll improve this in Chapter 6 with proper service location
-        const engine = (window as any).engine as Engine;
-        this.input = engine.getInputManager();
+    public start(): void {
+        // Input is already initialized from singleton
     }
 
     public update(deltaTime: number): void {
-        // Only process input in play mode
-        const engine = (window as any).engine as Engine;
-        if (!engine.isPlaying) return;
+        // Query play state via events
+        const isPlaying = this.gameObject.scene!.events.invoke('editor.isPlaying') as boolean;
+        if (!isPlaying) return;
 
         // WASD movement
         const moveDir = { x: 0, y: 0, z: 0 };

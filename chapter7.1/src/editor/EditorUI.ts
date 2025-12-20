@@ -5,7 +5,6 @@ import { InspectorPanel } from './InspectorPanel';
 import { SceneSerializer } from '../core/SceneSerializer';
 import { GameObjectFactory } from '../core/GameObjectFactory';
 import { GameObject } from '../core/GameObject';
-import { ViewportSelector } from './ViewportSelector';
 import { EditorCameraController } from './EditorCameraController';
 import { EditorGrid } from './EditorGrid';
 import { CameraGizmo } from './CameraGizmo';
@@ -21,11 +20,10 @@ export class EditorUI {
     private engine: Engine;
     private hierarchyPanel: HierarchyPanel;
     private inspectorPanel: InspectorPanel;
-    private viewportSelector: ViewportSelector;
     private editorCameraController: EditorCameraController;
     private editorGrid: EditorGrid;
     private cameraGizmo: CameraGizmo | null = null;
-    private cameraPreview: CameraPreview;
+    private cameraPreview: CameraPreview; // always create one on init
     private viewportGizmo: ViewportGizmo;
 
     // Project system components
@@ -48,8 +46,6 @@ export class EditorUI {
     private openProjectButton: HTMLButtonElement;
     private newProjectButton: HTMLButtonElement;
 
-    private selectedObjectId: string | null = null;
-
     constructor(engine: Engine) {
         this.engine = engine;
 
@@ -67,11 +63,6 @@ export class EditorUI {
         this.openProjectButton = document.getElementById('open-project-btn') as HTMLButtonElement;
         this.newProjectButton = document.getElementById('new-project-btn') as HTMLButtonElement;
 
-        this.hierarchyPanel = new HierarchyPanel(this);
-        this.inspectorPanel = new InspectorPanel(this);
-
-        // Create ViewportSelector for click-to-select
-        this.viewportSelector = new ViewportSelector(engine, this);
 
         // Create editor camera controller
         this.editorCameraController = new EditorCameraController(engine);
@@ -84,13 +75,17 @@ export class EditorUI {
             this.editorGrid.addToScene(scene.getThreeScene());
         }
 
+        this.hierarchyPanel = new HierarchyPanel(this, scene);
+        this.inspectorPanel = new InspectorPanel(this, scene);
+
+
         // Create camera gizmo
         if (scene) {
-            this.cameraGizmo = new CameraGizmo(scene.getThreeScene());
+            this.cameraGizmo = new CameraGizmo(scene.getThreeScene(), scene, engine);
         }
 
         // Create camera preview
-        this.cameraPreview = new CameraPreview();
+        this.cameraPreview = new CameraPreview(scene!, engine);
 
         // Create viewport gizmo
         this.viewportGizmo = new ViewportGizmo();
@@ -104,6 +99,9 @@ export class EditorUI {
         this.viewportGizmo.onAlign((direction, viewName) => {
             this.editorCameraController.alignToView(direction, viewName);
         });
+
+        // Pass viewport gizmo to editor camera controller for selection
+        this.editorCameraController.setViewportGizmo(this.viewportGizmo);
 
         // Initialize file system and asset manager
         this.fileSystem = new FileSystemManager();
@@ -120,7 +118,67 @@ export class EditorUI {
         // Setup keyboard shortcuts (including Cmd/Ctrl+S)
         this.setupKeyboardShortcuts();
 
+        // Listen to project scene changes
+        this.setupProjectEventListeners();
+
         console.log('🎨 Editor UI initialized');
+    }
+
+    /**
+     * Setup event listeners for project-level events
+     */
+    private setupProjectEventListeners(): void {
+        // Listen for scene changes from the project
+        this.engine.events.on('project.sceneChanged', (data: any) => {
+            console.log('🎨 EditorUI: Handling scene change event');
+
+            // Load the new scene into the engine
+            this.engine.loadScene(data.scene);
+
+            // Re-add editor objects (grid, gizmos, etc.)
+            this.reAddEditorObjects();
+
+            // Update camera preview with new scene
+            if (this.cameraPreview) {
+                this.cameraPreview.updateScene(data.scene);
+            }
+
+            // Update camera gizmo with new scene
+            if (this.cameraGizmo) {
+                this.cameraGizmo.dispose();
+                this.cameraGizmo = new CameraGizmo(
+                    data.scene.getThreeScene(),
+                    data.scene,
+                    this.engine
+                );
+            }
+
+            // Refresh UI
+            this.refresh();
+        });
+
+        // Listen for selection changes
+        this.engine.events.on('selection.changed', (data: any) => {
+            // Update highlights
+            if (data.previous) {
+                this.removeHighlight(data.previous.id);
+            }
+            if (data.current) {
+                this.addHighlight(data.current.id);
+            }
+
+            // Update camera preview if selected object has a camera component
+            const scene = this.engine.getScene();
+            if (scene && data.current) {
+                const camera = data.current.getComponent(Camera);
+                this.cameraPreview.setCamera(camera);
+            } else {
+                this.cameraPreview.setCamera(null);
+            }
+
+            // Refresh panels
+            this.refresh();
+        });
     }
 
     /**
@@ -182,7 +240,7 @@ export class EditorUI {
         this.editorGrid.addToScene(threeScene);
 
         // Recreate camera gizmo with new scene
-        this.cameraGizmo = new CameraGizmo(threeScene);
+        this.cameraGizmo = new CameraGizmo(threeScene, scene, this.engine);
 
         // Re-add viewport gizmo
         if (this.viewportGizmo) {
@@ -240,7 +298,8 @@ export class EditorUI {
     }
 
     private onPlay(): void {
-        this.engine.play();
+        // Fire event instead of calling engine directly
+        this.engine.events.fire('editor.play');
         this.playButton.disabled = true;
         this.stopButton.disabled = false;
         this.modeElement.textContent = 'PLAYING';
@@ -251,7 +310,8 @@ export class EditorUI {
     }
 
     private onStop(): void {
-        this.engine.stop();
+        // Fire event instead of calling engine directly
+        this.engine.events.fire('editor.stop');
         this.playButton.disabled = false;
         this.stopButton.disabled = true;
         this.modeElement.textContent = 'EDITOR';
@@ -276,8 +336,7 @@ export class EditorUI {
 
         const cube = GameObjectFactory.createCube();
         scene.addGameObject(cube);
-        this.selectObject(cube.id);
-        this.refresh();
+        this.engine.events.fire('selection.set', cube);
     }
 
     private onAddSphere(): void {
@@ -286,8 +345,7 @@ export class EditorUI {
 
         const sphere = GameObjectFactory.createSphere();
         scene.addGameObject(sphere);
-        this.selectObject(sphere.id);
-        this.refresh();
+        this.engine.events.fire('selection.set', sphere);
     }
 
     private onAddEmpty(): void {
@@ -296,8 +354,7 @@ export class EditorUI {
 
         const empty = new GameObject('Empty');
         scene.addGameObject(empty);
-        this.selectObject(empty.id);
-        this.refresh();
+        this.engine.events.fire('selection.set', empty);
     }
 
     private onAddPlayer(): void {
@@ -307,8 +364,7 @@ export class EditorUI {
         const player = GameObjectFactory.createPlayer();
         player.transform.localPosition.set(0, 1, 0);  // Start above ground
         scene.addGameObject(player);
-        this.selectObject(player.id);
-        this.refresh();
+        this.engine.events.fire('selection.set', player);
     }
 
     /**
@@ -325,7 +381,7 @@ export class EditorUI {
         }
 
         // Create project instance
-        this.project = new Project('LoadedProject', this.fileSystem);
+        this.project = new Project('LoadedProject', this.fileSystem, this.engine.events);
 
         // Try to load project
         const loaded = await this.project.load();
@@ -345,10 +401,8 @@ export class EditorUI {
             if (firstScenePath) {
                 const scene = await this.project.loadScene(firstScenePath);
                 if (scene) {
-                    this.engine.loadScene(scene);
+                    // Just set current scene - the event will handle the rest
                     this.project.setCurrentScene(scene, firstScenePath);
-                    this.reAddEditorObjects();
-                    this.refresh();
                 }
             }
         }
@@ -379,7 +433,7 @@ export class EditorUI {
         }
 
         // Create project
-        this.project = new Project(name, this.fileSystem);
+        this.project = new Project(name, this.fileSystem, this.engine.events);
         const created = await this.project.create();
 
         if (!created) {
@@ -391,11 +445,10 @@ export class EditorUI {
         // Update project panel
         this.projectPanel.setProject(this.project);
 
-        // Load the default scene that was created
+        // Trigger scene change event for the default scene
         if (this.project.currentScene) {
-            this.engine.loadScene(this.project.currentScene);
-            this.reAddEditorObjects();
-            this.refresh();
+            const scenePath = this.project.getScenePath('DefaultScene') || 'Assets/Scenes/DefaultScene.json';
+            this.project.setCurrentScene(this.project.currentScene, scenePath);
         }
 
         console.log(`✅ Project created: ${name}`);
@@ -559,9 +612,8 @@ export class EditorUI {
         // Load the scene
         this.project.loadScene(scenePath).then(scene => {
             if (scene) {
-                this.engine.loadScene(scene);
+                // Just set current scene - the event will handle the rest
                 this.project!.setCurrentScene(scene, scenePath);
-                this.refresh();
                 console.log(`✅ Loaded scene: ${sceneName}`);
             }
         });
@@ -569,37 +621,6 @@ export class EditorUI {
 
     public getEngine(): Engine {
         return this.engine;
-    }
-
-    public selectObject(objectId: string | null): void {
-        // Remove highlight from previous selection
-        if (this.selectedObjectId) {
-            this.removeHighlight(this.selectedObjectId);
-        }
-
-        this.selectedObjectId = objectId;
-
-        // Add highlight to new selection
-        if (objectId) {
-            this.addHighlight(objectId);
-        }
-
-        // Update camera preview if selected object has a camera component
-        const scene = this.engine.getScene();
-        if (scene && objectId) {
-            const go = scene.findById(objectId);
-            if (go) {
-                const camera = go.getComponent(Camera);
-                this.cameraPreview.setCamera(camera);
-            } else {
-                this.cameraPreview.setCamera(null);
-            }
-        } else {
-            this.cameraPreview.setCamera(null);
-        }
-
-        this.hierarchyPanel.refresh();
-        this.inspectorPanel.refresh();
     }
 
     private addHighlight(objectId: string): void {
@@ -629,9 +650,6 @@ export class EditorUI {
         object3D.userData.selected = false;
     }
 
-    public getSelectedObjectId(): string | null {
-        return this.selectedObjectId;
-    }
 
     public refresh(): void {
         this.hierarchyPanel.refresh();

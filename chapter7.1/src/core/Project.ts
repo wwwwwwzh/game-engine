@@ -1,6 +1,7 @@
 import { Scene } from './Scene';
 import { FileSystemManager } from './FileSystemManager';
 import { SceneSerializer } from './SceneSerializer';
+import { Events } from '../events';
 
 /**
  * Project - Represents a complete game project.
@@ -33,15 +34,19 @@ export class Project {
     // File system interface
     private fileSystem: FileSystemManager;
 
+    // Events system
+    private events: Events;
+
     // Project metadata
     public version: string = '1.0.0';
     public engineVersion: string = '0.7.0';
     public created: Date = new Date();
     public modified: Date = new Date();
 
-    constructor(name: string, fileSystem: FileSystemManager) {
+    constructor(name: string, fileSystem: FileSystemManager, events: Events) {
         this.name = name;
         this.fileSystem = fileSystem;
+        this.events = events;
     }
 
     /**
@@ -78,7 +83,7 @@ export class Project {
         }
 
         // Create a default scene
-        const defaultScene = new Scene('DefaultScene');
+        const defaultScene = new Scene('DefaultScene', this.events);
         const scenePath = 'Assets/Scenes/DefaultScene.json';
 
         const saved = await this.saveScene(defaultScene, scenePath);
@@ -211,7 +216,7 @@ export class Project {
 
         // Deserialize
         try {
-            const scene = new Scene('LoadedScene');
+            const scene = new Scene('LoadedScene', this.events);
             SceneSerializer.deserialize(json, scene);
 
             console.log(`✅ Scene loaded: ${scene.name}`);
@@ -250,6 +255,7 @@ export class Project {
      * @param filepath The scene's file path
      */
     public setCurrentScene(scene: Scene, filepath: string): void {
+        const previousScene = this.currentScene;
         this.currentScene = scene;
         this.currentScenePath = filepath;
 
@@ -257,6 +263,15 @@ export class Project {
         if (!this.scenes.has(scene.name)) {
             this.scenes.set(scene.name, filepath);
         }
+
+        // Fire event to notify all systems that the scene has changed
+        this.events.fire('project.sceneChanged', {
+            scene: scene,
+            filepath: filepath,
+            previousScene: previousScene
+        });
+
+        console.log(`📦 Project: Scene changed to "${scene.name}"`);
     }
 
     /**
@@ -276,7 +291,7 @@ export class Project {
         }
 
         // Create new scene
-        const scene = new Scene(name);
+        const scene = new Scene(name, this.events);
 
         // Save to disk
         const saved = await this.saveScene(scene, scenePath);

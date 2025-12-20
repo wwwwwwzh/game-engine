@@ -2,9 +2,11 @@
  * InputManager - Centralized input handling for keyboard and mouse.
  * Tracks input state and provides clean API for querying.
  *
- * Works in both editor and play mode - consumers decide how to use it.
+ * Singleton pattern - accessible globally for both editor and game code.
  */
 export class InputManager {
+    private static instance: InputManager | null = null;
+
     // Keyboard state
     private keysDown: Set<string> = new Set();
     private keysPressed: Set<string> = new Set();  // This frame only
@@ -21,10 +23,41 @@ export class InputManager {
     // Canvas for relative coordinates
     private canvas: HTMLCanvasElement;
 
-    constructor(canvas: HTMLCanvasElement) {
+    private constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
         this.setupEventListeners();
-        console.log('⌨️  InputManager initialized');
+        console.log('⌨️  InputManager initialized (singleton)');
+    }
+
+    /**
+     * Initialize the singleton instance.
+     * Must be called once at application startup.
+     */
+    public static initialize(canvas: HTMLCanvasElement): InputManager {
+        if (InputManager.instance) {
+            console.warn('InputManager already initialized');
+            return InputManager.instance;
+        }
+        InputManager.instance = new InputManager(canvas);
+        return InputManager.instance;
+    }
+
+    /**
+     * Get the singleton instance.
+     * Throws if not initialized.
+     */
+    public static getInstance(): InputManager {
+        if (!InputManager.instance) {
+            throw new Error('InputManager not initialized. Call InputManager.initialize() first.');
+        }
+        return InputManager.instance;
+    }
+
+    /**
+     * For testing: reset the singleton
+     */
+    public static reset(): void {
+        InputManager.instance = null;
     }
 
     private setupEventListeners(): void {

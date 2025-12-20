@@ -2,6 +2,7 @@ import type { EditorUI } from './EditorUI';
 import { GameObject } from '../core/GameObject';
 import { MeshRenderer } from '../components/MeshRenderer';
 import * as THREE from 'three/webgpu';
+import { Scene } from '../core/Scene';
 
 interface DragState {
     dragging: GameObject | null;
@@ -14,6 +15,7 @@ interface DragState {
  */
 export class HierarchyPanel {
     private editorUI: EditorUI;
+    private scene: Scene | null;
     private contentElement: HTMLElement;
     private dragState: DragState = {
         dragging: null,
@@ -22,8 +24,9 @@ export class HierarchyPanel {
     };
     private expandedNodes: Set<string> = new Set();
 
-    constructor(editorUI: EditorUI) {
+    constructor(editorUI: EditorUI, scene: Scene | null) {
         this.editorUI = editorUI;
+        this.scene = scene;
         this.contentElement = document.getElementById('hierarchy-content') as HTMLElement;
 
         // Handle drop on empty space (make root)
@@ -41,17 +44,21 @@ export class HierarchyPanel {
                 this.refresh();
             }
         });
+
+        // Listen for scene changes from project
+        this.editorUI.getEngine().events.on('project.sceneChanged', (data: any) => {
+            this.scene = data.scene;
+            this.refresh();
+        });
     }
 
     public refresh(): void {
-        const scene = this.editorUI.getEngine().getScene();
-
-        if (!scene) {
+        if (!this.scene) {
             this.contentElement.innerHTML = '<div class="empty-state">No scene loaded</div>';
             return;
         }
 
-        const rootObjects = scene.getRootGameObjects();
+        const rootObjects = this.scene.getRootGameObjects();
 
         this.contentElement.innerHTML = '';
 
@@ -121,7 +128,8 @@ export class HierarchyPanel {
         item.style.paddingLeft = `${depth * 16 + 8}px`;
         item.draggable = true;
 
-        if (go.id === this.editorUI.getSelectedObjectId()) {
+        const selectedObject = this.scene!.events.invoke('selection.get') as GameObject | null;
+        if (selectedObject && go.id === selectedObject.id) {
             item.classList.add('selected');
         }
 
@@ -152,7 +160,7 @@ export class HierarchyPanel {
 
         // Click to select
         item.addEventListener('click', () => {
-            this.editorUI.selectObject(go.id);
+            this.editorUI.getEngine().events.fire('selection.set', go);
         });
 
         // Double-click to rename
@@ -382,8 +390,9 @@ export class HierarchyPanel {
     }
 
     private deleteObject(go: GameObject): void {
-        if (go.id === this.editorUI.getSelectedObjectId()) {
-            this.editorUI.selectObject(null);
+        const selectedObject = this.scene!.events.invoke('selection.get') as GameObject | null;
+        if (selectedObject && go.id === selectedObject.id) {
+            this.editorUI.getEngine().events.fire('selection.clear');
         }
         go.destroy();
         this.refresh();

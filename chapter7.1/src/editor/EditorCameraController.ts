@@ -1,6 +1,9 @@
 import * as THREE from 'three/webgpu';
 import type { Engine } from '../core/Engine';
-import { ServiceLocator } from '../core/ServiceLocator';
+import type { InputManager } from '../core/InputManager';
+import type { Scene } from '../core/Scene';
+import { EditorObjectRegistry } from './EditorObjectRegistry';
+import type { ViewportGizmo } from './ViewportGizmo';
 
 /**
  * EditorCameraController - Professional viewport navigation.
@@ -32,6 +35,9 @@ import { ServiceLocator } from '../core/ServiceLocator';
 export class EditorCameraController {
     private engine: Engine;
     private camera: THREE.PerspectiveCamera;
+    private canvas: HTMLCanvasElement;
+    private raycaster: THREE.Raycaster;
+    private viewportGizmo: ViewportGizmo | null = null;
 
     // Position-target system
     private position: THREE.Vector3;
@@ -67,6 +73,8 @@ export class EditorCameraController {
     constructor(engine: Engine) {
         this.engine = engine;
         this.camera = engine.getRenderer().getCamera();
+        this.canvas = document.getElementById('game-canvas') as HTMLCanvasElement;
+        this.raycaster = new THREE.Raycaster();
 
         // Initialize camera position and target
         this.position = new THREE.Vector3(0, 0, this.distance);
@@ -78,9 +86,114 @@ export class EditorCameraController {
         // Set initial camera transform
         this.updateCameraTransform();
 
+        // Setup canvas click listener for object selection
+        this.setupClickListener();
+
         console.log('🎥 Editor camera controller initialized');
         console.log('   Position-target system: orbit, pan, zoom all feel natural');
+        console.log('   Click handling: viewport selection integrated');
+    }
 
+    /**
+     * Set the viewport gizmo reference (called by EditorUI)
+     */
+    public setViewportGizmo(gizmo: ViewportGizmo): void {
+        this.viewportGizmo = gizmo;
+    }
+
+    /**
+     * Setup click listener for object selection
+     */
+    private setupClickListener(): void {
+        this.canvas.addEventListener('click', (e) => this.onCanvasClick(e));
+    }
+
+    /**
+     * Handle canvas clicks for object selection
+     */
+    private onCanvasClick(e: MouseEvent): void {
+        // Only handle clicks in editor mode
+        if (this.engine.isPlaying) return;
+
+        const input = this.engine.getInputManager();
+        const mouse = input.getNormalizedMousePosition();
+
+        // Perform raycast
+        this.raycaster.setFromCamera(new THREE.Vector2(mouse.x, mouse.y), this.camera);
+
+        // Check if viewport gizmo was clicked first (priority over scene objects)
+        if (this.viewportGizmo && this.viewportGizmo.handleClick(this.raycaster)) {
+            return; // Gizmo handled the click, don't process further
+        }
+
+        const scene = this.engine.getScene();
+        if (!scene) return;
+
+        // Get all renderable objects in the scene
+        const threeScene = scene.getThreeScene();
+        const intersects = this.raycaster.intersectObjects(threeScene.children, true);
+
+        if (intersects.length > 0) {
+            // Filter out editor-only objects (grid, axes, helpers)
+            let clickedObject3D = null;
+            for (const intersect of intersects) {
+                const obj = intersect.object;
+                // Skip editor helpers
+                if (EditorObjectRegistry.isEditorObject(obj)) {
+                    continue;
+                }
+                clickedObject3D = obj;
+                break;
+            }
+
+            if (!clickedObject3D) {
+                // Only hit editor objects, treat as empty space
+                this.engine.events.fire('selection.set', null);
+                return;
+            }
+
+            // Find the GameObject that owns this mesh
+            const gameObject = this.findGameObjectForObject3D(clickedObject3D, scene);
+
+            if (gameObject) {
+                // Check if Shift is held for multi-selection
+                const isMultiSelect = input.isKeyDown('Shift');
+
+                if (isMultiSelect) {
+                    // Multi-select: add to selection
+                    this.engine.events.fire('selection.add', gameObject);
+                } else {
+                    // Single selection
+                    this.engine.events.fire('selection.set', gameObject);
+                }
+            }
+        } else {
+            // Clicked empty space - deselect
+            this.engine.events.fire('selection.set', null);
+        }
+    }
+
+    /**
+     * Find the GameObject that owns a given Object3D.
+     * The Object3D might be a Mesh (child), so we traverse up to find the GameObject's root Object3D.
+     */
+    private findGameObjectForObject3D(object3D: THREE.Object3D, scene: Scene): any {
+        let current = object3D;
+
+        // Traverse up to find the root Object3D (the one directly in the scene)
+        while (current.parent && current.parent !== scene.getThreeScene()) {
+            current = current.parent;
+        }
+
+        // Now find the GameObject that owns this Object3D
+        const allGameObjects = scene.getAllGameObjects();
+        for (const go of allGameObjects) {
+            if (go.getObject3D() === current) {
+                return go;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -90,7 +203,7 @@ export class EditorCameraController {
         // Only handle input in editor mode
         if (this.engine.isPlaying) return;
 
-        const input = ServiceLocator.getInput();
+        const input = this.engine.getInputManager();
         const mouseDelta = input.getMouseDelta();
 
         // Track mouse buttons
@@ -245,24 +358,18 @@ export class EditorCameraController {
      * Set target to object position, adjust distance to fit
      */
     private frameSelectedObject(): void {
-        const scene = ServiceLocator.getScene();
+        const scene = this.engine.getScene();
         if (!scene) return;
 
-        // Get selected object from editor UI
-        const editorUI = (window as any).editor;
-        if (!editorUI) return;
-
-        const selectedId = editorUI.getSelectedObjectId();
-        if (!selectedId) {
+        // Get selected object from events
+        const go = this.engine.events.invoke('selection.get');
+        if (!go) {
             // No selection, frame world origin
             this.target.set(0, 0, 0);
             this.distance = 10;
             this.updatePositionFromYawPitch();
             return;
         }
-
-        const go = scene.findById(selectedId);
-        if (!go) return;
 
         // Set target to object position
         const worldPos = go.transform.getWorldPosition();

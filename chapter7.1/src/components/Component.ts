@@ -1,5 +1,7 @@
 import type { GameObject } from '../core/GameObject';
 import type { ISerializable } from '../core/ISerializable';
+import type { Events } from '../events';
+import type { Scene } from '../core/Scene';
 
 /**
  * Base class for all components.
@@ -13,12 +15,23 @@ export abstract class Component implements ISerializable {
      * Set automatically when component is added to a GameObject.
      */
     public gameObject!: GameObject;
-    
+
     /**
      * Quick access to transform (every GameObject has one)
      */
     public get transform() {
         return this.gameObject.transform;
+    }
+
+
+    /**
+     * Quick access to scene
+     */
+    protected get scene(): Scene {
+        if (!this.gameObject.scene) {
+            throw new Error('GameObject must be added to a scene');
+        }
+        return this.gameObject.scene;
     }
     
     /**
