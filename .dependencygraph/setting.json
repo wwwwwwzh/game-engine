@@ -1,0 +1,13 @@
+{
+  "entryFilePath": "chapter7/src/main.ts",
+  "alias": false,
+  "resolveExtensions": [
+    ".js",
+    ".jsx",
+    ".ts",
+    ".tsx",
+    ".vue",
+    ".scss",
+    ".less"
+  ]
+}
