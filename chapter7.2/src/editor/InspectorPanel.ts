@@ -21,6 +21,9 @@ export class InspectorPanel {
     private panel: Panel;
     private scene: Scene | null;
     private events: Events;
+    private positionInput: VectorInput | null = null;
+    private rotationInput: VectorInput | null = null;
+    private scaleInput: VectorInput | null = null;
 
     constructor(events: Events, scene: Scene | null) {
         this.events = events;
@@ -47,6 +50,9 @@ export class InspectorPanel {
     }
 
     private setupEventListeners(): void {
+        this.events.on('editor.objectAdded', () => {
+            this.refresh();
+        });
         // Refresh when selection changes
         this.events.on('selection.changed', () => {
             this.refresh();
@@ -56,6 +62,11 @@ export class InspectorPanel {
         this.events.on('project.sceneChanged', (data: any) => {
             this.scene = data.scene;
             this.refresh();
+        });
+
+        // Update transform values in real-time when gizmo changes
+        this.events.on('transform.changed', (data: any) => {
+            this.updateTransformValues();
         });
     }
 
@@ -85,8 +96,8 @@ export class InspectorPanel {
         });
         nameInput.on('change', (value: string) => {
             selectedObject.name = value;
-            // Fire event to refresh hierarchy
-            this.events.fire('scene.hierarchyChanged');
+            // Fire event to update hierarchy name
+            this.events.fire('editor.objectNameChange', selectedObject);
         });
 
         this.panel.append(nameInput);
@@ -118,26 +129,60 @@ export class InspectorPanel {
 
         // Position
         panel.append(new Label({ text: 'Position' }));
-        panel.append(this.createVector3Input(
+        const positionGroup = this.createVector3Input(
             obj.transform.localPosition,
             (x, y, z) => obj.transform.localPosition.set(x, y, z)
-        ));
+        );
+        this.positionInput = positionGroup.field as VectorInput;
+        panel.append(positionGroup);
 
         // Rotation
         panel.append(new Label({ text: 'Rotation' }));
-        panel.append(this.createVector3Input(
+        const rotationGroup = this.createVector3Input(
             obj.transform.localRotation,
             (x, y, z) => obj.transform.localRotation.set(x* (Math.PI / 180), y* (Math.PI / 180), z* (Math.PI / 180))
-        ));
+        );
+        this.rotationInput = rotationGroup.field as VectorInput;
+        panel.append(rotationGroup);
 
         // Scale
         panel.append(new Label({ text: 'Scale' }));
-        panel.append(this.createVector3Input(
+        const scaleGroup = this.createVector3Input(
             obj.transform.localScale,
             (x, y, z) => obj.transform.localScale.set(x, y, z)
-        ));
+        );
+        this.scaleInput = scaleGroup.field as VectorInput;
+        panel.append(scaleGroup);
 
         return panel;
+    }
+
+    /**
+     * Update transform input values in real-time
+     */
+    private updateTransformValues(): void {
+        const currentObject = this.events.invoke('selection.get') as GameObject | null;
+        if (!currentObject) return;
+
+        if (this.positionInput) {
+            const pos = currentObject.transform.localPosition;
+            this.positionInput.value = [pos.x, pos.y, pos.z];
+        }
+
+        if (this.rotationInput) {
+            const rot = currentObject.transform.localRotation;
+            // Convert radians to degrees for display
+            this.rotationInput.value = [
+                rot.x * (180 / Math.PI),
+                rot.y * (180 / Math.PI),
+                rot.z * (180 / Math.PI)
+            ];
+        }
+
+        if (this.scaleInput) {
+            const scale = currentObject.transform.localScale;
+            this.scaleInput.value = [scale.x, scale.y, scale.z];
+        }
     }
 
     /**
@@ -243,7 +288,7 @@ export class InspectorPanel {
         return panel;
     }
 
-    getElement(): panel {
+    getElement(): Panel {
         return this.panel;
     }
 }

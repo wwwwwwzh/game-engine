@@ -1,6 +1,7 @@
-import { Container, Button, Label } from '@playcanvas/pcui';
+import { Container, Button, Label, Panel } from '@playcanvas/pcui';
 import '@playcanvas/pcui/styles'; // Import PCUI dark theme
 import type { Engine } from '../core/Engine';
+import { Scene } from '../core/Scene';
 import { HierarchyPanel } from './HierarchyPanel';
 import { InspectorPanel } from './InspectorPanel';
 import { ProjectPanel } from './ProjectPanel';
@@ -9,6 +10,7 @@ import { EditorGrid } from './EditorGrid';
 import { CameraGizmo } from './CameraGizmo';
 import { CameraPreview } from './CameraPreview';
 import { ViewportGizmo } from './ViewportGizmo';
+import { TransformGizmoManager } from './TransformGizmoManager';
 import { Camera } from '../components/Camera';
 import { Project } from '../core/Project';
 import { AssetManager } from '../core/AssetManager';
@@ -27,6 +29,7 @@ import { GameObject } from '../core/GameObject';
  */
 export class EditorUI {
     private engine: Engine;
+    private scene: Scene;
 
     // Panels (now PCUI-based)
     private hierarchyPanel: HierarchyPanel;
@@ -39,6 +42,9 @@ export class EditorUI {
     private cameraGizmo: CameraGizmo | null = null;
     private cameraPreview: CameraPreview;
     private viewportGizmo: ViewportGizmo;
+
+    // Add property
+    private transformGizmoManager: TransformGizmoManager;
 
     // Project system (unchanged from 7.1)
     private project: Project | null = null;
@@ -54,12 +60,12 @@ export class EditorUI {
     constructor(engine: Engine) {
         this.engine = engine;
 
-        const scene = engine.getScene()!;
+        this.scene = engine.getScene()!;
         const events = engine.events;
 
         // Create PCUI panels (pass Events bus, not Observer)
-        this.hierarchyPanel = new HierarchyPanel(events, scene);
-        this.inspectorPanel = new InspectorPanel(events, scene);
+        this.hierarchyPanel = new HierarchyPanel(events, this.scene);
+        this.inspectorPanel = new InspectorPanel(events, this.scene);
         this.projectPanel = new ProjectPanel();
 
         // Create project system
@@ -73,11 +79,22 @@ export class EditorUI {
         this.editorCameraController = new EditorCameraController(engine);
         engine.setEditorCamera(this.editorCameraController);
 
+        // --- INSERT THIS BLOCK ---
+        // Create Gizmo Manager
+        this.transformGizmoManager = new TransformGizmoManager(
+            engine.getRenderer().getCamera(),
+            document.getElementById('game-canvas')!, // The canvas element
+            this.scene.getThreeScene(),
+            this.editorCameraController,
+            engine.events
+        );
+        // -------------------------
+
         this.editorGrid = new EditorGrid();
-        this.editorGrid.addToScene(scene.getThreeScene());
+        this.editorGrid.addToScene(this.scene.getThreeScene());
 
         this.viewportGizmo = new ViewportGizmo();
-        this.cameraPreview = new CameraPreview(scene, engine);
+        this.cameraPreview = new CameraPreview(this.scene, engine);
 
         // Setup gizmo click callback
         this.viewportGizmo.onAlign((direction, viewName) => {
@@ -88,10 +105,10 @@ export class EditorUI {
         this.editorCameraController.setViewportGizmo(this.viewportGizmo);
 
         // Add gizmo to scene
-        scene.getThreeScene().add(this.viewportGizmo.getObject3D());
+        this.scene.getThreeScene().add(this.viewportGizmo.getObject3D());
 
         // Create camera gizmo
-        this.cameraGizmo = new CameraGizmo(scene.getThreeScene(), scene, engine);
+        this.cameraGizmo = new CameraGizmo(this.scene.getThreeScene(), this.scene, engine);
 
         // Setup event listeners (Events bus pattern)
         this.setupEventListeners();
@@ -128,7 +145,12 @@ export class EditorUI {
             flexGrow: 1
         });
         centerPanel.append(this.createToolbar());
-        centerPanel.append(this.createViewport());
+        const viewport = this.createViewport();
+        centerPanel.append(viewport);
+
+        // Add floating gizmo toolbar to viewport
+        const gizmoToolbar = this.createGizmoToolbar();
+        viewport.dom.appendChild(gizmoToolbar.dom);
 
         upper.append(this.hierarchyPanel.getElement());
         upper.append(centerPanel);
@@ -223,7 +245,7 @@ export class EditorUI {
         // Make canvas fill the container
         canvas.style.width = '100%';
         canvas.style.height = '100%';
-        
+
         viewport.dom.appendChild(canvas);
 
         // Handle resize
@@ -234,6 +256,111 @@ export class EditorUI {
         });
 
         return viewport;
+    }
+
+    /**
+     * Create floating gizmo toolbar
+     */
+    private createGizmoToolbar(): Container {
+        const gizmoToolbar = new Container({
+            flex: true,
+            flexDirection: 'row',
+            // width: 300,
+            height: 40,
+            class: 'gizmo-toolbar'
+        });
+
+        // Position it at the bottom of the viewport
+        gizmoToolbar.dom.style.position = 'absolute';
+        gizmoToolbar.dom.style.bottom = '10px';
+        gizmoToolbar.dom.style.left = '50%';
+        gizmoToolbar.dom.style.transform = 'translateX(-50%)';
+        gizmoToolbar.dom.style.zIndex = '1000';
+        gizmoToolbar.dom.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+        gizmoToolbar.dom.style.borderRadius = '5px';
+        gizmoToolbar.dom.style.padding = '5px';
+
+        // Create gizmo buttons
+        const moveBtn = new Button({ text: '✚ Move (W)' });
+        moveBtn.on('click', () => this.transformGizmoManager.setMode('translate'));
+
+        const rotateBtn = new Button({ text: '↻ Rotate (E)' });
+        rotateBtn.on('click', () => this.transformGizmoManager.setMode('rotate'));
+
+        const scaleBtn = new Button({ text: '⤢ Scale (R)' });
+        scaleBtn.on('click', () => this.transformGizmoManager.setMode('scale'));
+
+        const spaceBtn = new Button({ text: '🌐 World/Local (Q)' });
+        spaceBtn.on('click', () => {
+            // Toggle logic
+            this.transformGizmoManager.setSpace(
+                (spaceBtn.text as string).includes('World') ? 'local' : 'world'
+            );
+            // Update button text
+            spaceBtn.text = (spaceBtn.text as string).includes('World') ? '📦 Local (Q)' : '🌐 World (Q)';
+        });
+
+        // Add buttons to toolbar
+        gizmoToolbar.append(moveBtn);
+        gizmoToolbar.append(rotateBtn);
+        gizmoToolbar.append(scaleBtn);
+        gizmoToolbar.append(spaceBtn);
+
+        // Make it draggable
+        this.makeDraggable(gizmoToolbar.dom);
+
+        return gizmoToolbar;
+    }
+
+    /**
+     * Make an element draggable
+     */
+    private makeDraggable(element: HTMLElement): void {
+        let isDragging = false;
+        let startX = 0;
+        let startY = 0;
+        let initialLeft = 0;
+        let initialTop = 0;
+
+        const onMouseDown = (e: MouseEvent) => {
+            // Allow dragging from the container or its children
+            if (!element.contains(e.target as Node)) return;
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+
+            // Get the current position relative to the viewport
+            const rect = element.getBoundingClientRect();
+            const viewportRect = element.parentElement!.getBoundingClientRect();
+            initialLeft = rect.left - viewportRect.left;
+            initialTop = rect.top - viewportRect.top;
+
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+            e.preventDefault();
+            element.style.cursor = 'grabbing';
+        };
+
+        const onMouseMove = (e: MouseEvent) => {
+            if (!isDragging) return;
+            const deltaX = e.clientX - startX;
+            const deltaY = e.clientY - startY;
+
+            // Set absolute positioning
+            element.style.left = `${initialLeft + deltaX}px`;
+            element.style.top = `${initialTop + deltaY}px`;
+            element.style.transform = 'none'; // Remove centering transform
+        };
+
+        const onMouseUp = () => {
+            isDragging = false;
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            element.style.cursor = 'grab';
+        };
+
+        element.addEventListener('mousedown', onMouseDown);
+        element.style.cursor = 'grab';
     }
 
     /**
@@ -265,9 +392,10 @@ export class EditorUI {
                 this.addHighlight(data.current.id);
             }
 
+            this.transformGizmoManager.attach(data.current);
+
             // Update camera preview if selected object has a camera component
-            const scene = this.engine.getScene();
-            if (scene && data.current) {
+            if (this.scene && data.current) {
                 const camera = data.current.getComponent(Camera);
                 this.cameraPreview.setCamera(camera);
             } else {
@@ -298,6 +426,10 @@ export class EditorUI {
                     data.scene,
                     this.engine
                 );
+            }
+
+            if (this.transformGizmoManager) {
+                this.transformGizmoManager.updateScene(data.scene.getThreeScene());
             }
 
             // Refresh UI
@@ -352,7 +484,7 @@ export class EditorUI {
 
         const cube = GameObjectFactory.createCube('Cube');
         scene.addGameObject(cube);
-        this.engine.events.fire('scene.hierarchyChanged');
+        this.engine.events.fire('editor.objectAdded', cube);
     }
 
     private onAddSphere(): void {
@@ -361,7 +493,7 @@ export class EditorUI {
 
         const sphere = GameObjectFactory.createSphere('Sphere');
         scene.addGameObject(sphere);
-        this.engine.events.fire('scene.hierarchyChanged');
+        this.engine.events.fire('editor.objectAdded', sphere);
     }
 
     private onAddPlayer(): void {
@@ -370,7 +502,7 @@ export class EditorUI {
 
         const empty = GameObjectFactory.createPlayer('Empty');
         scene.addGameObject(empty);
-        this.engine.events.fire('scene.hierarchyChanged');
+        this.engine.events.fire('editor.objectAdded', empty);
     }
 
     private async onNewProject(): Promise<void> {
@@ -517,6 +649,9 @@ export class EditorUI {
 
         // Only show viewport gizmo in editor mode
         this.viewportGizmo.setVisible(!this.engine.isPlaying);
+
+        // Update gizmo manager
+        this.transformGizmoManager.update();
 
         // Render camera preview
         this.cameraPreview.render();

@@ -75,9 +75,19 @@ export class HierarchyPanel {
             this.updateSelection(data.current);
         });
 
-        // Rebuild when hierarchy changes
-        this.events.on('scene.hierarchyChanged', () => {
-            this.refresh();
+        // Add new object to hierarchy
+        this.events.on('editor.objectAdded', (obj: GameObject) => {
+            this.addGameObject(obj, this.treeView);
+            // Select the new object
+            this.events.fire('selection.set', obj);
+        });
+
+        // Update object name in hierarchy
+        this.events.on('editor.objectNameChange', (obj: GameObject) => {
+            const item = this.gameObjectToItem.get(obj);
+            if (item) {
+                item.text = obj.name;
+            }
         });
     }
 

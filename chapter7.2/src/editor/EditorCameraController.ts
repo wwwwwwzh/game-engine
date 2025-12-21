@@ -70,6 +70,9 @@ export class EditorCameraController {
     private interpolationElapsed: number = 0;
     private interpolationDuration: number = 1;
 
+    // 1. ADD THIS PROPERTY
+    public enabled: boolean = true;
+
     constructor(engine: Engine) {
         this.engine = engine;
         this.camera = engine.getRenderer().getCamera();
@@ -200,8 +203,8 @@ export class EditorCameraController {
      * Update camera every frame
      */
     public update(deltaTime: number): void {
-        // Only handle input in editor mode
-        if (this.engine.isPlaying) return;
+        // 2. ADD THIS CHECK AT THE VERY TOP
+        if (!this.enabled || this.engine.isPlaying) return;
 
         const input = this.engine.getInputManager();
         const mouseDelta = input.getMouseDelta();
