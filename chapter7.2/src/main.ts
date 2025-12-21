@@ -41,9 +41,9 @@ engine.start();
 
 // 8. Update FPS display in main loop
 setInterval(() => {
-    const fps = Math.round(1000 / engine.getDeltaTime());
+    const fps = Math.round(1000000 / engine.getDeltaTime());
     editor.updateStats(fps);
-}, 100);
+}, 1000);
 
 // 9. Expose for debugging
 (window as any).engine = engine;

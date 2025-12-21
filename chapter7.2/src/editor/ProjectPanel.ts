@@ -18,9 +18,14 @@ export class ProjectPanel {
     constructor() {
         this.container = new Container({
             class: 'project-panel',
-            flex: true,
-            flexDirection: 'column',
-            width: '100%'
+            collapsible: false,
+            scrollable: true,
+            headerText: 'Hierarchy',
+            height: 200,
+            width: '100%',
+            resizable: 'top',
+            resizeMin: 200,
+            resizeMax: 500
         });
 
         // Project header

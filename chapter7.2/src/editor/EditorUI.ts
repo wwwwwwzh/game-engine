@@ -77,7 +77,7 @@ export class EditorUI {
         this.editorGrid.addToScene(scene.getThreeScene());
 
         this.viewportGizmo = new ViewportGizmo();
-        this.cameraPreview = new CameraPreview(engine);
+        this.cameraPreview = new CameraPreview(scene, engine);
 
         // Setup gizmo click callback
         this.viewportGizmo.onAlign((direction, viewName) => {
@@ -107,20 +107,19 @@ export class EditorUI {
         const root = new Container({
             id: 'editor-root',
             flex: true,
-            flexDirection: 'row'
+            flexDirection: 'column',
+            width: '100%',
+            height: '100%'
         });
 
-        // Left panel: Hierarchy + Project
-        const leftPanel = new Container({
+        const upper = new Container({
+            id: 'editor-root',
             flex: true,
-            flexDirection: 'column',
-            width: 250,
-            resizable: 'right',
-            resizeMin: 200,
-            resizeMax: 400
+            flexDirection: 'row',
+            width: '100%',
+            height: '100%',
         });
-        leftPanel.append(this.hierarchyPanel.getElement());
-        leftPanel.append(this.projectPanel.getElement());
+
 
         // Center: Toolbar + Viewport
         const centerPanel = new Container({
@@ -131,25 +130,26 @@ export class EditorUI {
         centerPanel.append(this.createToolbar());
         centerPanel.append(this.createViewport());
 
-        // Right panel: Inspector
-        const rightPanel = new Container({
-            flex: true,
-            flexDirection: 'column',
-            width: 300,
-            resizable: 'left',
-            resizeMin: 250,
-            resizeMax: 500
-        });
-        rightPanel.append(this.inspectorPanel.getElement());
-
-        // Assemble
-        root.append(leftPanel);
-        root.append(centerPanel);
-        root.append(rightPanel);
+        upper.append(this.hierarchyPanel.getElement());
+        upper.append(centerPanel);
+        upper.append(this.inspectorPanel.getElement());
+        root.append(upper);
+        root.append(this.projectPanel.getElement());
 
         // Mount to DOM
         const app = document.getElementById('app')!;
         app.appendChild(root.dom);
+
+        // Force a resize after the layout is mounted to fix initial blur
+        requestAnimationFrame(() => {
+            const viewport = centerPanel.dom.querySelector('#viewport') as HTMLElement;
+            if (viewport) {
+                const width = viewport.clientWidth;
+                const height = viewport.clientHeight;
+                this.engine.getRenderer().onResize(width, height);
+                console.log(`🔧 Initial viewport resize: ${width}x${height}`);
+            }
+        });
 
         return root;
     }
@@ -178,8 +178,8 @@ export class EditorUI {
         const addSphereBtn = new Button({ text: '+ Sphere' });
         addSphereBtn.on('click', () => this.onAddSphere());
 
-        const addEmptyBtn = new Button({ text: '+ Empty' });
-        addEmptyBtn.on('click', () => this.onAddEmpty());
+        const addPlayerBtn = new Button({ text: '+ Player' });
+        addPlayerBtn.on('click', () => this.onAddPlayer());
 
         // Project buttons
         const newProjectBtn = new Button({ text: '📁 New' });
@@ -196,7 +196,7 @@ export class EditorUI {
         toolbar.append(this.stopBtn);
         toolbar.append(addCubeBtn);
         toolbar.append(addSphereBtn);
-        toolbar.append(addEmptyBtn);
+        toolbar.append(addPlayerBtn);
         toolbar.append(newProjectBtn);
         toolbar.append(openProjectBtn);
         toolbar.append(this.statsLabel);
@@ -211,7 +211,7 @@ export class EditorUI {
         const viewport = new Container({
             id: 'viewport',
             flex: true,
-            flexGrow: 1
+            flexGrow: 1,
         });
 
         let canvas = document.getElementById('game-canvas') as HTMLCanvasElement;
@@ -220,7 +220,19 @@ export class EditorUI {
             canvas.id = 'game-canvas';
         }
 
+        // Make canvas fill the container
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        
         viewport.dom.appendChild(canvas);
+
+        // Handle resize
+        viewport.on('resize', () => {
+            const width = viewport.dom.clientWidth;
+            const height = viewport.dom.clientHeight;
+            this.engine.getRenderer().onResize(width, height);
+        });
+
         return viewport;
     }
 
@@ -261,9 +273,6 @@ export class EditorUI {
             } else {
                 this.cameraPreview.setCamera(null);
             }
-
-            // Refresh panels
-            this.refresh();
         });
 
         // Project scene changes
@@ -355,11 +364,11 @@ export class EditorUI {
         this.engine.events.fire('scene.hierarchyChanged');
     }
 
-    private onAddEmpty(): void {
+    private onAddPlayer(): void {
         const scene = this.engine.getScene();
         if (!scene) return;
 
-        const empty = GameObjectFactory.createEmpty('Empty');
+        const empty = GameObjectFactory.createPlayer('Empty');
         scene.addGameObject(empty);
         this.engine.events.fire('scene.hierarchyChanged');
     }
@@ -384,7 +393,6 @@ export class EditorUI {
             return;
         }
 
-        this.assetManager.setProject(this.project);
         this.projectPanel.setAssetManager(this.assetManager);
 
         console.log('📁 New project created:', name);
@@ -409,7 +417,6 @@ export class EditorUI {
             return;
         }
 
-        this.assetManager.setProject(this.project);
         this.projectPanel.setAssetManager(this.assetManager);
 
         // Load the first scene (or default scene)

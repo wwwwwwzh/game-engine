@@ -1,11 +1,13 @@
 import {
-    Container,
+    Panel,
     Label,
+    LabelGroup,
     TextInput,
     NumericInput,
-    Panel
+    VectorInput
 } from '@playcanvas/pcui';
 import type { GameObject } from '../core/GameObject';
+import { Transform } from '../components/Transform';
 import type { Scene } from '../core/Scene';
 import type { Events } from '../events';
 import { Camera } from '../components/Camera';
@@ -13,13 +15,10 @@ import { Camera } from '../components/Camera';
 /**
  * InspectorPanel - Object inspector using PCUI property controls.
  *
- * Before (7.1): ~250 lines of manual input creation
- * After (7.2): ~90 lines using PCUI components
- *
  * Uses Events bus to get selected object (closure pattern from SelectionState)
  */
 export class InspectorPanel {
-    private container: Container;
+    private panel: Panel;
     private scene: Scene | null;
     private events: Events;
 
@@ -27,12 +26,17 @@ export class InspectorPanel {
         this.events = events;
         this.scene = scene;
 
-        // Create main container
-        this.container = new Container({
-            class: 'inspector-panel',
-            flex: true,
-            flexDirection: 'column',
-            width: '100%'
+        // Create main panel
+        this.panel = new Panel({
+            collapseHorizontally: true,
+            collapsible: true,
+            scrollable: true,
+            headerText: 'Inspector',
+            width: 300,
+            height: '100%',
+            resizable: 'left',
+            resizeMin: 300,
+            resizeMax: 600
         });
 
         // Listen to Events for updates
@@ -60,7 +64,7 @@ export class InspectorPanel {
      * Called manually when selection/scene changes (same pattern as 7.1)
      */
     public refresh(): void {
-        this.container.clear();
+        this.panel.clear();
 
         // Get selected object from Events bus (closure pattern)
         const selectedObject = this.events.invoke('selection.get') as GameObject | null;
@@ -70,7 +74,7 @@ export class InspectorPanel {
                 text: 'Select an object to inspect',
                 class: 'empty-state'
             });
-            this.container.append(emptyLabel);
+            this.panel.append(emptyLabel);
             return;
         }
 
@@ -85,17 +89,19 @@ export class InspectorPanel {
             this.events.fire('scene.hierarchyChanged');
         });
 
-        this.container.append(nameInput);
+        this.panel.append(nameInput);
 
         // Transform panel
         const transformPanel = this.createTransformPanel(selectedObject);
-        this.container.append(transformPanel);
+        this.panel.append(transformPanel);
 
         // Component panels
         for (const component of selectedObject.getAllComponents()) {
-            const componentPanel = this.createComponentPanel(component);
-            if (componentPanel) {
-                this.container.append(componentPanel);
+            if (!(component instanceof Transform)) {
+                const componentPanel = this.createComponentPanel(component);
+                if (componentPanel) {
+                    this.panel.append(componentPanel);
+                }
             }
         }
     }
@@ -113,22 +119,22 @@ export class InspectorPanel {
         // Position
         panel.append(new Label({ text: 'Position' }));
         panel.append(this.createVector3Input(
-            obj.transform.position,
-            (x, y, z) => obj.transform.position.set(x, y, z)
+            obj.transform.localPosition,
+            (x, y, z) => obj.transform.localPosition.set(x, y, z)
         ));
 
         // Rotation
         panel.append(new Label({ text: 'Rotation' }));
         panel.append(this.createVector3Input(
-            obj.transform.rotation,
-            (x, y, z) => obj.transform.rotation.set(x, y, z)
+            obj.transform.localRotation,
+            (x, y, z) => obj.transform.localRotation.set(x* (Math.PI / 180), y* (Math.PI / 180), z* (Math.PI / 180))
         ));
 
         // Scale
         panel.append(new Label({ text: 'Scale' }));
         panel.append(this.createVector3Input(
-            obj.transform.scale,
-            (x, y, z) => obj.transform.scale.set(x, y, z)
+            obj.transform.localScale,
+            (x, y, z) => obj.transform.localScale.set(x, y, z)
         ));
 
         return panel;
@@ -140,44 +146,25 @@ export class InspectorPanel {
     private createVector3Input(
         value: { x: number; y: number; z: number },
         onChange: (x: number, y: number, z: number) => void
-    ): Container {
-        const container = new Container({
-            flex: true,
-            flexDirection: 'row'
+    ): LabelGroup {
+        const vectorInput = new VectorInput({
+            dimensions: 3,
+            value: [value.x, value.y, value.z],
+            // min: 0,
+            // max: 1,
+            placeholder: ['X', 'Y', 'Z'],
+            precision: 5,
+            // step: 0.1
         });
 
-        const xInput = new NumericInput({
-            value: value.x,
-            placeholder: 'X',
-            precision: 2,
-            step: 0.1
+        vectorInput.on('change', (v: number[]) => {
+            onChange(v[0], v[1], v[2]);
         });
-        xInput.on('change', (v: number) => onChange(v, value.y, value.z));
 
-        const yInput = new NumericInput({
-            value: value.y,
-            placeholder: 'Y',
-            precision: 2,
-            step: 0.1
+        return new LabelGroup({
+            text: '3D Vector',
+            field: vectorInput
         });
-        yInput.on('change', (v: number) => onChange(value.x, v, value.z));
-
-        const zInput = new NumericInput({
-            value: value.z,
-            placeholder: 'Z',
-            precision: 2,
-            step: 0.1
-        });
-        zInput.on('change', (v: number) => onChange(value.x, value.y, v));
-
-        container.append(new Label({ text: 'X' }));
-        container.append(xInput);
-        container.append(new Label({ text: 'Y' }));
-        container.append(yInput);
-        container.append(new Label({ text: 'Z' }));
-        container.append(zInput);
-
-        return container;
     }
 
     /**
@@ -256,7 +243,7 @@ export class InspectorPanel {
         return panel;
     }
 
-    getElement(): Container {
-        return this.container;
+    getElement(): panel {
+        return this.panel;
     }
 }
