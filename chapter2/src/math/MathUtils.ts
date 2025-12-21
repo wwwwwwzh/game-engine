@@ -78,3 +78,4 @@ export function exponentialDecay(a: number, b: number, decay: number, deltaTime:
     return b + (a - b) * Math.exp(-decay * deltaTime);
 }
 
+

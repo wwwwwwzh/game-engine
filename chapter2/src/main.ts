@@ -20,3 +20,4 @@ console.log('💡 Tip: Access the engine from console with "window.engine"');
 console.log('💡 Try: window.engine.stop() or window.engine.start()');
 console.log('💡 Try: window.engine.getRenderer().getCamera().position.z = 10');
 
+
