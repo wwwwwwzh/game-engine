@@ -60,9 +60,22 @@
 
         const treeView = new TreeView({
             allowRenaming: false,
-            allowReordering: false,
-            allowDrag: false
+            allowReordering: true,
+            allowDrag: true
         });
+
+        treeView.on('dragstart', (item, parent, index) => {
+            console.log('Drag start:', item, 'from parent:', parent instanceof TreeView ? 'root' : parent, 'at index:', index);
+        });
+
+        treeView.on('dragend', (item, parent, index) => {
+            console.log('Drag end:', item, 'to parent:', parent instanceof TreeView ? 'root' : parent, 'at index:', index);
+        });
+        treeView.on('reparent', () => {
+            console.log('Reparenting event fired');
+        })
+
+        window.treeView = treeView;
 
         const iframe = document.createElement('iframe');
 
