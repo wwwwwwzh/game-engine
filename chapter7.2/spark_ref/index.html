@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spark • Hello World</title>
+    <style>
+      body {
+        margin: 0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.180.0/three.module.js",
+          "@sparkjsdev/spark": "https://sparkjs.dev/releases/spark/0.1.10/spark.module.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import * as THREE from 'three';
+      import { SplatMesh } from '@sparkjsdev/spark';
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(
+        60,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+      const renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      const splatURL = 'https://sparkjs.dev/assets/splats/butterfly.spz';
+      const butterfly = new SplatMesh({ url: splatURL });
+      butterfly.quaternion.set(1, 0, 0, 0);
+      butterfly.position.set(0, 0, -3);
+      scene.add(butterfly);
+
+      let lastTime;
+      renderer.setAnimationLoop(function animate(time) {
+        const deltaTime = time - (lastTime || time);
+        lastTime = time;
+        renderer.render(scene, camera);
+        butterfly.rotation.y += deltaTime / 2500;
+      });
+    </script>
+  </body>
+</html>

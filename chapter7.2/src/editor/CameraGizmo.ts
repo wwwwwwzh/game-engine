@@ -1,4 +1,4 @@
-import * as THREE from 'three/webgpu';
+import * as THREE from '../three';
 import { Camera } from '../components/Camera';
 import type { Scene } from '../core/Scene';
 import type { Engine } from '../core/Engine';

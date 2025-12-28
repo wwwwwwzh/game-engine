@@ -1,4 +1,5 @@
-import * as THREE from 'three/webgpu';
+import * as THREE from '../three';
+import { ENGINE_CONFIG } from '../three';
 import { Camera } from '../components/Camera';
 import type { Scene } from '../core/Scene';
 import type { Engine } from '../core/Engine';
@@ -9,11 +10,12 @@ import { Container, Label } from '@playcanvas/pcui';
  * Displays at bottom right of the viewport when a camera component is selected
  *
  * Now uses PCUI for consistent styling and proper resize handling
+ * Supports both WebGL and WebGPU renderers based on config
  */
 export class CameraPreview {
     private previewContainer: Container;
     private previewCanvas: HTMLCanvasElement;
-    private previewRenderer: THREE.WebGPURenderer | null = null;
+    private previewRenderer: any = null; // Can be WebGLRenderer or WebGPURenderer
     private currentCamera: Camera | null = null;
     private isInitialized: boolean = false;
     private scene: Scene;
@@ -92,22 +94,32 @@ export class CameraPreview {
 
     private async initializeRenderer(): Promise<void> {
         try {
-            // Create WebGPU renderer for preview
-            this.previewRenderer = new THREE.WebGPURenderer({
-                canvas: this.previewCanvas,
-                antialias: true,
-                forceWebGL: false
-            });
+            // Create renderer based on config
+            if (ENGINE_CONFIG.renderer === 'webgpu') {
+                this.previewRenderer = new THREE.WebGLRenderer({
+                    canvas: this.previewCanvas,
+                    antialias: true,
+                });
+            } else {
+                this.previewRenderer = new THREE.WebGLRenderer({
+                    canvas: this.previewCanvas,
+                    antialias: true,
+                });
+            }
 
             // Set size with proper pixel ratio to avoid blur
             this.previewRenderer.setSize(this.PREVIEW_WIDTH, this.PREVIEW_HEIGHT);
             this.previewRenderer.setPixelRatio(window.devicePixelRatio);
             this.previewRenderer.setClearColor(new THREE.Color(0x1a1a1a), 1.0);
 
-            await this.previewRenderer.init();
+            // WebGPU requires async initialization
+            if (ENGINE_CONFIG.renderer === 'webgpu') {
+                await this.previewRenderer.init();
+            }
+
             this.isInitialized = true;
 
-            console.log('📷 Camera preview renderer initialized');
+            console.log(`📷 Camera preview renderer initialized (${ENGINE_CONFIG.renderer})`);
         } catch (error) {
             console.error('Failed to initialize camera preview renderer:', error);
         }

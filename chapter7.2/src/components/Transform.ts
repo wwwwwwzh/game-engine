@@ -1,4 +1,4 @@
-import * as THREE from 'three/webgpu';
+import * as THREE from '../three';
 import { Component } from './Component';
 
 /**
@@ -90,8 +90,12 @@ export class Transform extends Component {
         return this.object3D.rotation;
     }
 
-    public set rotation(value: THREE.Euler) {
-        this.object3D.rotation.copy(value);
+    public set rotation(value: THREE.Euler | number[]) {
+        if (Array.isArray(value)) {
+            this.object3D.rotation.set(value[0], value[1], value[2]);
+        } else {
+            this.object3D.rotation.copy(value);
+        }
     }
 
     public get scale(): THREE.Vector3 {

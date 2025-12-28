@@ -1,4 +1,4 @@
-import * as THREE from 'three/webgpu';
+import * as THREE from '../three';
 
 /**
  * ViewportGizmo - A Unity-like viewport orientation gizmo.

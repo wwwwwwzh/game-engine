@@ -1,14 +1,16 @@
-import * as THREE from 'three/webgpu';
+import * as THREE from '../three';
+import { ENGINE_CONFIG } from '../three';
 
 /**
- * Renderer - thin wrapper around Three.js WebGPURenderer.
+ * Renderer - thin wrapper around Three.js Renderer.
  * Manages rendering pipeline and camera.
  * Scene provides the Three.js scene to render.
  *
  * This is ENGINE code - works in both editor and runtime.
+ * Supports both WebGLRenderer and WebGPURenderer based on config.
  */
 export class Renderer {
-    private renderer: THREE.WebGPURenderer;
+    private renderer: any; // Can be WebGLRenderer or WebGPURenderer depending on config
     private editorCamera: THREE.PerspectiveCamera;  // Rename camera to editorCamera
     private activeCamera: THREE.PerspectiveCamera;   // Currently active camera
     private canvas: HTMLCanvasElement;
@@ -17,12 +19,19 @@ export class Renderer {
     constructor(canvas: HTMLCanvasElement, threeScene: THREE.Scene) {
         this.canvas = canvas;
 
-        // Create WebGPU renderer
-        this.renderer = new THREE.WebGPURenderer({
-            canvas: canvas,
-            antialias: true,
-            forceWebGL: false  // Let it use WebGPU if available
-        });
+        // Create renderer based on config
+        if (ENGINE_CONFIG.renderer === 'webgpu') {
+            this.renderer = new THREE.WebGPURenderer({
+                canvas: canvas,
+                antialias: true,
+                forceWebGL: false  // Let it use WebGPU if available
+            });
+        } else {
+            this.renderer = new THREE.WebGLRenderer({
+                canvas: canvas,
+                antialias: true,
+            });
+        }
 
         // Use canvas actual size, not window size
         const width = canvas.clientWidth || window.innerWidth;
@@ -50,20 +59,25 @@ export class Renderer {
         directionalLight.position.set(5, 10, 7.5);
         threeScene.add(directionalLight);
 
-        console.log('🎨 Renderer initialized');
+        console.log(`🎨 Renderer initialized (${ENGINE_CONFIG.renderer})`);
 
-        // Initialize the renderer (async for WebGPU)
+        // Initialize the renderer (async for WebGPU, sync for WebGL)
         this.initializeRenderer();
+        document.body.appendChild(this.renderer.domElement);
     }
 
     private async initializeRenderer(): Promise<void> {
         try {
-            await this.renderer.init();
+            if (ENGINE_CONFIG.renderer === 'webgpu') {
+                // WebGPU requires async initialization
+                await (this.renderer as any).init();
+                const backend = (this.renderer as any).backend;
+                console.log(`   Backend: ${backend.constructor.name}`);
+            } else {
+                // WebGL is ready immediately
+                console.log(`   Backend: WebGLRenderer`);
+            }
             this.isInitialized = true;
-
-            // Check which backend is being used
-            const backend = this.renderer.backend;
-            console.log(`   Backend: ${backend.constructor.name}`);
         } catch (error) {
             console.error('Failed to initialize renderer:', error);
         }

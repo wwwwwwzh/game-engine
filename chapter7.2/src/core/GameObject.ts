@@ -1,4 +1,4 @@
-import * as THREE from 'three/webgpu';
+import * as THREE from '../three';
 import { Component } from '../components/Component';
 import { Transform } from '../components/Transform';
 import type { Scene } from './Scene';
@@ -59,6 +59,17 @@ export class GameObject implements ISerializable {
         component.gameObject = this;
         this.components.push(component);
         component.awake();
+
+        // Immediately call start() for async initialization
+        // This allows components like SplatMesh to load resources immediately
+        const startResult = component.start();
+        if (startResult instanceof Promise) {
+            startResult.catch(err => {
+                console.error(`Error in component start: ${component.getTypeName()}`, err);
+            });
+        }
+        (component as any)._started = true; // Mark as started so _internalUpdate doesn't call it again
+
         return component;
     }
 

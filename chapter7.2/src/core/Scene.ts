@@ -1,4 +1,4 @@
-import * as THREE from 'three/webgpu';
+import * as THREE from '../three';
 import { GameObject } from './GameObject';
 import type { Component } from '../components/Component';
 import { EditorObjectRegistry } from '../editor/EditorObjectRegistry';

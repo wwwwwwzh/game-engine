@@ -1,5 +1,5 @@
 // src/editor/GizmoManager.ts
-import * as THREE from 'three/webgpu';
+import * as THREE from '../three';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
 import type { EditorCameraController } from './EditorCameraController';
 import type { GameObject } from '../core/GameObject';

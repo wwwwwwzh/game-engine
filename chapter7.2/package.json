@@ -15,6 +15,7 @@
   "dependencies": {
     "@playcanvas/observer": "^1.6.6",
     "@playcanvas/pcui": "^5.4.1",
+    "@sparkjsdev/spark": "^0.1.10",
     "three": "^0.169.0"
   }
 }

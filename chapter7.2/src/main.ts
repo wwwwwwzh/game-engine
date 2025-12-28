@@ -1,11 +1,15 @@
 import { Engine } from './core/Engine';
 import { Scene } from './core/Scene';
+import { GameObject } from './core/GameObject';
 import { EditorUI } from './editor/EditorUI';
 import { Events } from './events';
 
 // Import state managers
 import { registerEditorState } from './core/state/EditorState';
 import { registerSelectionState } from './core/state/SelectionState';
+
+// Import SplatMeshComponent for butterfly
+import { SplatMeshComponent } from './components/SplatMeshComponent';
 
 console.log('='.repeat(50));
 console.log('🎮 GAME ENGINE - CHAPTER 7.2');
@@ -32,6 +36,7 @@ registerSelectionState(events, scene);
 // 5. Load scene
 engine.loadScene(scene);
 
+
 // 6. Create PCUI editor
 const editor = new EditorUI(engine);
 engine.setEditorUI(editor);
@@ -44,6 +49,16 @@ setInterval(() => {
     const fps = Math.round(1000000 / engine.getDeltaTime());
     editor.updateStats(fps);
 }, 1000);
+
+
+// 6. Create a butterfly using SplatMeshComponent
+const butterflyGO = new GameObject('Butterfly');
+const butterflyComponent = new SplatMeshComponent();
+butterflyGO.addComponent(butterflyComponent);
+scene.addGameObject(butterflyGO);
+events.fire('editor.objectAdded', butterflyGO);
+butterflyGO.transform.rotation.set(Math.PI, 0, 0);
+events.fire('transform.changed', butterflyGO);
 
 // 9. Expose for debugging
 (window as any).engine = engine;

@@ -16,7 +16,7 @@ import { Project } from '../core/Project';
 import { AssetManager } from '../core/AssetManager';
 import { FileSystemManager } from '../core/FileSystemManager';
 import { GameObjectFactory } from '../core/GameObjectFactory';
-import * as THREE from 'three/webgpu';
+import * as THREE from '../three';
 import { GameObject } from '../core/GameObject';
 
 /**

@@ -56,8 +56,9 @@ export abstract class Component implements ISerializable {
     /**
      * Called before the first Update, after all Awakes
      * Use for initialization that depends on other components
+     * Can be async for components that need to load resources
      */
-    public start(): void {
+    public start(): void | Promise<void> {
         // Override in derived classes
     }
     
